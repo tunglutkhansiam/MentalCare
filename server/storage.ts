@@ -9,7 +9,7 @@ const MemoryStore = createMemoryStore(session);
 // Modify the interface with CRUD methods for all entities
 export interface IStorage {
   // Session store
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 
   // User methods
   getUser(id: number): Promise<User | undefined>;
@@ -52,7 +52,7 @@ export class MemStorage implements IStorage {
   private messagesMap: Map<number, Message>;
   private categoriesMap: Map<number, Category>;
   
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
   
   private userIdCounter: number = 1;
   private expertIdCounter: number = 1;
@@ -78,38 +78,38 @@ export class MemStorage implements IStorage {
   }
 
   private async initializeSampleData() {
-    // Create health categories
+    // Create mental health categories
     await this.createCategory({
-      name: "Cardiology",
-      icon: "❤️",
+      name: "Depression",
+      icon: "😔",
       backgroundColor: "#EBF5FF"
     });
     
     await this.createCategory({
-      name: "Neurology",
-      icon: "🧠",
+      name: "Anxiety",
+      icon: "😰",
       backgroundColor: "#E6F7EF"
     });
     
     await this.createCategory({
-      name: "Orthopedics",
-      icon: "🦴",
+      name: "Stress",
+      icon: "😩",
       backgroundColor: "#FEF3C7"
     });
     
     await this.createCategory({
-      name: "Psychology",
-      icon: "🧘",
+      name: "Trauma",
+      icon: "🧠",
       backgroundColor: "#F3E8FF"
     });
     
-    // Create experts
+    // Create mental health experts
     const expert1 = await this.createExpert({
       name: "Dr. James Wilson",
-      specialty: "Cardiologist",
-      about: "Dr. Wilson is a board-certified cardiologist with over 15 years of experience. He specializes in preventive cardiology, coronary artery disease, and heart rhythm disorders. Dr. Wilson is dedicated to providing compassionate care and helping patients maintain heart health.",
-      education: "MD, Harvard Medical School\nResidency, Massachusetts General Hospital\nBoard Certified in Cardiovascular Disease",
-      experience: "15+ years of clinical experience\nFormer Chief of Cardiology at Boston Medical Center",
+      specialty: "Clinical Psychologist",
+      about: "Dr. Wilson is a licensed clinical psychologist with over 15 years of experience. He specializes in cognitive behavioral therapy, depression, and anxiety disorders. Dr. Wilson is dedicated to providing compassionate care and helping patients develop effective coping strategies.",
+      education: "PhD in Clinical Psychology, Harvard University\nInternship at Massachusetts General Hospital\nLicensed Clinical Psychologist",
+      experience: "15+ years of clinical experience\nFormer Director of Mental Health Services at Boston Medical Center",
       rating: 5,
       reviewCount: 120,
       profileImage: "",
@@ -118,10 +118,10 @@ export class MemStorage implements IStorage {
     
     const expert2 = await this.createExpert({
       name: "Dr. Sarah Johnson",
-      specialty: "Dermatologist",
-      about: "Dr. Johnson is a board-certified dermatologist specializing in both medical and cosmetic dermatology. With her extensive training and gentle approach, she provides personalized care for patients of all ages.",
-      education: "MD, University of California, San Francisco\nResidency, Stanford University Medical Center\nBoard Certified in Dermatology",
-      experience: "12 years of clinical practice\nPublished researcher in skin cancer prevention",
+      specialty: "Psychiatrist",
+      about: "Dr. Johnson is a board-certified psychiatrist specializing in mood disorders and anxiety. With her extensive training and holistic approach, she provides personalized care combining medication management and psychotherapy techniques.",
+      education: "MD, University of California, San Francisco\nPsychiatry Residency, Stanford University Medical Center\nBoard Certified in Psychiatry",
+      experience: "12 years of clinical practice\nPublished researcher in treatment-resistant depression",
       rating: 4.9,
       reviewCount: 98,
       profileImage: "",
@@ -130,10 +130,10 @@ export class MemStorage implements IStorage {
     
     const expert3 = await this.createExpert({
       name: "Dr. Rebecca Miller",
-      specialty: "Cardiologist",
-      about: "Dr. Miller is a respected cardiologist focused on women's heart health and preventive care. She combines clinical excellence with a patient-centered approach to help manage and prevent heart disease.",
-      education: "MD, Johns Hopkins University\nResidency, Cleveland Clinic\nBoard Certified in Cardiovascular Disease",
-      experience: "10 years of specialized practice\nDirector of Women's Heart Health Program",
+      specialty: "Psychotherapist",
+      about: "Dr. Miller is a respected psychotherapist focused on women's mental health and trauma-informed care. She combines evidence-based approaches with a patient-centered philosophy to help manage and overcome emotional challenges.",
+      education: "PhD in Psychology, Johns Hopkins University\nTrauma-Focused Therapy Certification\nLicensed Psychotherapist",
+      experience: "10 years of specialized practice\nDirector of Women's Mental Health Program",
       rating: 4.8,
       reviewCount: 85,
       profileImage: "",
@@ -142,10 +142,10 @@ export class MemStorage implements IStorage {
 
     const expert4 = await this.createExpert({
       name: "Dr. Thomas Nguyen",
-      specialty: "General Practitioner",
-      about: "Dr. Nguyen provides comprehensive primary care for the whole family. He emphasizes preventive medicine and developing long-term relationships with patients to support their overall health.",
-      education: "MD, Yale University School of Medicine\nResidency, Mayo Clinic\nBoard Certified in Family Medicine",
-      experience: "8 years in family practice\nFocus on preventive medicine and chronic disease management",
+      specialty: "Mental Health Counselor",
+      about: "Dr. Nguyen provides comprehensive mental health counseling for all ages. He emphasizes preventive strategies and developing resilience, with special expertise in family therapy and relationship issues.",
+      education: "PhD in Counseling Psychology, Yale University\nFamily Systems Therapy Certification\nLicensed Mental Health Counselor",
+      experience: "8 years in counseling practice\nFocus on relationship issues and family dynamics",
       rating: 4.7,
       reviewCount: 112,
       profileImage: "",
@@ -155,37 +155,67 @@ export class MemStorage implements IStorage {
     // Create specializations
     await this.createSpecialization({
       expertId: expert1.id,
-      name: "Heart Disease"
+      name: "Depression"
     });
     
     await this.createSpecialization({
       expertId: expert1.id,
-      name: "Arrhythmia"
+      name: "Anxiety"
     });
     
     await this.createSpecialization({
       expertId: expert1.id,
-      name: "Hypertension"
+      name: "Cognitive Behavioral Therapy"
     });
     
     await this.createSpecialization({
       expertId: expert1.id,
-      name: "Preventive Cardiology"
+      name: "Stress Management"
     });
     
     await this.createSpecialization({
       expertId: expert2.id,
-      name: "Acne Treatment"
+      name: "Medication Management"
     });
     
     await this.createSpecialization({
       expertId: expert2.id,
-      name: "Skin Cancer Screening"
+      name: "Bipolar Disorder"
     });
     
     await this.createSpecialization({
       expertId: expert2.id,
-      name: "Cosmetic Dermatology"
+      name: "Anxiety Disorders"
+    });
+    
+    await this.createSpecialization({
+      expertId: expert3.id,
+      name: "Trauma Therapy"
+    });
+    
+    await this.createSpecialization({
+      expertId: expert3.id,
+      name: "Women's Mental Health"
+    });
+    
+    await this.createSpecialization({
+      expertId: expert3.id,
+      name: "PTSD"
+    });
+    
+    await this.createSpecialization({
+      expertId: expert4.id,
+      name: "Family Therapy"
+    });
+    
+    await this.createSpecialization({
+      expertId: expert4.id,
+      name: "Relationship Counseling"
+    });
+    
+    await this.createSpecialization({
+      expertId: expert4.id,
+      name: "Stress Management"
     });
   }
 
@@ -208,7 +238,18 @@ export class MemStorage implements IStorage {
 
   async createUser(user: InsertUser): Promise<User> {
     const id = this.userIdCounter++;
-    const newUser: User = { ...user, id };
+    const newUser: User = { 
+      ...user, 
+      id,
+      bloodType: null,
+      height: null,
+      weight: null,
+      allergies: null,
+      chronicConditions: null,
+      phoneNumber: null,
+      profileImage: null,
+      dateOfBirth: user.dateOfBirth || null
+    };
     this.usersMap.set(id, newUser);
     return newUser;
   }
@@ -250,7 +291,14 @@ export class MemStorage implements IStorage {
 
   async createExpert(expert: InsertExpert): Promise<Expert> {
     const id = this.expertIdCounter++;
-    const newExpert: Expert = { ...expert, id };
+    const newExpert: Expert = { 
+      ...expert, 
+      id,
+      profileImage: expert.profileImage || null,
+      rating: expert.rating || null,
+      reviewCount: expert.reviewCount || null,
+      isAvailable: expert.isAvailable !== undefined ? expert.isAvailable : null
+    };
     this.expertsMap.set(id, newExpert);
     return newExpert;
   }
@@ -327,7 +375,8 @@ export class MemStorage implements IStorage {
       ...appointment, 
       id, 
       status: "upcoming", 
-      createdAt: now
+      createdAt: now,
+      reason: appointment.reason || null
     };
     this.appointmentsMap.set(id, newAppointment);
     return newAppointment;

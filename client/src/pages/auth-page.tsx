@@ -93,8 +93,8 @@ export default function AuthPage() {
     <div className="flex flex-col items-center justify-center min-h-screen px-4 py-8 bg-background">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">HealthConnect</h1>
-          <p className="text-muted-foreground">Free medical consultation at your fingertips</p>
+          <h1 className="text-3xl font-bold text-primary mb-2">MindfulChat</h1>
+          <p className="text-muted-foreground">Free mental health consultation at your fingertips</p>
         </div>
 
         <Tabs defaultValue="login" value={activeTab} onValueChange={setActiveTab}>

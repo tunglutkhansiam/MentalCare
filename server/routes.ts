@@ -277,22 +277,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Cleanup route to remove duplicate messages - temporary admin endpoint
-  app.get("/api/cleanup-messages", async (req, res) => {
-    // Temporary: No authentication check for debugging purposes
-    
+  // Cleanup route to remove duplicate messages for a specific conversation
+  app.get("/api/cleanup-chat/:userId/:expertId", async (req, res) => {
     try {
-      // Get all messages
-      const allMessages = await db.select().from(messages);
+      const userId = parseInt(req.params.userId);
+      const expertId = parseInt(req.params.expertId);
       
-      // Track seen messages by content + sender + userId + expertId
+      if (isNaN(userId) || isNaN(expertId)) {
+        return res.status(400).json({ message: "Invalid user or expert ID" });
+      }
+      
+      // Get conversation messages
+      const chatMessages = await db
+        .select()
+        .from(messages)
+        .where(
+          and(
+            eq(messages.userId, userId),
+            eq(messages.expertId, expertId)
+          )
+        );
+      
+      // Track seen messages by content to find duplicates
       const seenMessages = new Map();
       const duplicateIds: number[] = [];
       
       // Find duplicates
-      allMessages.forEach(msg => {
-        // Create a unique key for each message
-        const key = `${msg.content}-${msg.sender}-${msg.userId}-${msg.expertId}`;
+      chatMessages.forEach(msg => {
+        // Create a unique key for each message based on content
+        const key = `${msg.content}-${msg.sender}`;
         
         if (seenMessages.has(key)) {
           // If we've seen this message before, it's a duplicate
@@ -307,12 +320,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await db.delete(messages).where(inArray(messages.id, duplicateIds));
         return res.json({ 
           success: true, 
-          message: `Removed ${duplicateIds.length} duplicate messages`,
+          message: `Removed ${duplicateIds.length} duplicate messages from conversation`,
           removed: duplicateIds
         });
       }
       
-      return res.json({ success: true, message: "No duplicate messages found" });
+      return res.json({ 
+        success: true, 
+        message: "No duplicate messages found in this conversation" 
+      });
     } catch (error) {
       console.error("Error cleaning up messages:", error);
       res.status(500).json({ message: "Failed to clean up messages" });

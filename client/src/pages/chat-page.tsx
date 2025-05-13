@@ -227,6 +227,44 @@ export default function ChatPage() {
     sendMessage();
   };
   
+  // Function to clean up duplicate messages
+  const cleanupChat = async () => {
+    if (!user?.id || !expertId) return;
+    
+    try {
+      // Determine correct userId for the API call
+      const chatUserId = isExpert && userId ? userId : user.id.toString();
+      
+      // Call the cleanup endpoint
+      const response = await fetch(`/api/cleanup-chat/${chatUserId}/${expertId}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        toast({
+          title: "Chat Fixed",
+          description: data.message,
+          variant: "default",
+        });
+        
+        // Reload the page to refresh the messages
+        window.location.reload();
+      } else {
+        toast({
+          title: "Error",
+          description: data.message || "Failed to fix chat",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error cleaning up chat:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fix chat. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+  
   // Loading state
   if ((isExpert && loadingUser) || (!isExpert && loadingExpert)) {
     return <ChatPageSkeleton />;
@@ -279,11 +317,20 @@ export default function ChatPage() {
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <div className="bg-primary py-4 px-4 text-white">
-        <div className="flex items-center">
-          <button onClick={handleBackClick} className="mr-3">
-            <ArrowLeft className="h-5 w-5" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <button onClick={handleBackClick} className="mr-3">
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            {renderHeaderContent()}
+          </div>
+          <button 
+            onClick={() => cleanupChat()} 
+            className="text-xs bg-blue-600 hover:bg-blue-700 rounded px-2 py-1"
+            title="Remove duplicate messages"
+          >
+            Fix Chat
           </button>
-          {renderHeaderContent()}
         </div>
       </div>
       

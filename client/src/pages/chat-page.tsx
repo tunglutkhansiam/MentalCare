@@ -215,7 +215,7 @@ export default function ChatPage() {
             <ChatMessage 
               key={msg.id} 
               message={msg} 
-              isUser={isExpert ? msg.sender === "expert" : msg.sender === "user"} 
+              isUser={msg.sender === (isExpert ? "expert" : "user")} 
             />
           ))
         ) : (

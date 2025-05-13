@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import AuthPage from "@/pages/auth-page";
 import HomePage from "@/pages/home-page";
 import ExpertProfilePage from "@/pages/expert-profile-page";
+import ExpertDashboardPage from "@/pages/expert-dashboard-page";
 import AppointmentBookingPage from "@/pages/appointment-booking-page";
 import AppointmentsPage from "@/pages/appointments-page";
 import ChatPage from "@/pages/chat-page";
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       <ProtectedRoute path="/" component={HomePage} />
       <ProtectedRoute path="/expert/:expertId" component={ExpertProfilePage} />
+      <ProtectedRoute path="/expert-dashboard" component={ExpertDashboardPage} />
       <ProtectedRoute path="/book-appointment/:expertId" component={AppointmentBookingPage} />
       <ProtectedRoute path="/appointments" component={AppointmentsPage} />
       <ProtectedRoute path="/chat/:expertId" component={ChatPage} />

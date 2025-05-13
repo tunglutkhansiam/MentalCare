@@ -137,6 +137,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Expert profile for logged in user
+  app.get("/api/expert-profile", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const expert = await storage.getExpertByUserId(req.user.id);
+      if (!expert) {
+        return res.status(404).json({ message: "Expert profile not found" });
+      }
+      res.json(expert);
+    } catch (err) {
+      console.error("Error fetching expert profile:", err);
+      res.status(500).json({ message: "Failed to fetch expert profile" });
+    }
+  });
+
+  // Expert appointments
+  app.get("/api/expert/appointments", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      // First check if user is an expert
+      const expert = await storage.getExpertByUserId(req.user.id);
+      if (!expert) {
+        return res.status(403).json({ message: "Access denied: Not an expert" });
+      }
+      
+      // Get appointments for this expert
+      const appointments = await storage.getAppointmentsByExpert(expert.id);
+      res.json(appointments);
+    } catch (err) {
+      console.error("Error fetching expert appointments:", err);
+      res.status(500).json({ message: "Failed to fetch appointments" });
+    }
+  });
+  
   // Chat messages
   app.get("/api/messages/:expertId", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

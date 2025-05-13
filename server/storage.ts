@@ -30,6 +30,7 @@ export interface IStorage {
   
   // Appointment methods
   getAppointmentsByUser(userId: number): Promise<(Appointment & { expert: Expert })[]>;
+  getAppointmentsByExpert(expertId: number): Promise<(Appointment & { user: User })[]>;
   getUpcomingAppointments(userId: number): Promise<(Appointment & { expert: Expert })[]>;
   getPastAppointments(userId: number): Promise<(Appointment & { expert: Expert })[]>;
   getNextUpcomingAppointment(userId: number): Promise<(Appointment & { expert: Expert }) | undefined>;
@@ -393,6 +394,19 @@ export class MemStorage implements IStorage {
       userAppointments.map(async (appointment) => {
         const expert = await this.getExpert(appointment.expertId);
         return { ...appointment, expert: expert! };
+      })
+    );
+  }
+  
+  async getAppointmentsByExpert(expertId: number): Promise<(Appointment & { user: User })[]> {
+    const expertAppointments = Array.from(this.appointmentsMap.values()).filter(
+      (appointment) => appointment.expertId === expertId
+    );
+    
+    return Promise.all(
+      expertAppointments.map(async (appointment) => {
+        const user = await this.getUser(appointment.userId);
+        return { ...appointment, user: user! };
       })
     );
   }

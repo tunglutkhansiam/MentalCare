@@ -5,9 +5,9 @@ import WebSocket from "ws";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { z } from "zod";
-import { insertAppointmentSchema, insertMessageSchema, questionnaires, questionnaireResponses } from "@shared/schema";
+import { insertAppointmentSchema, insertMessageSchema, questionnaires, questionnaireResponses, messages } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, inArray } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
@@ -277,11 +277,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Cleanup route to remove duplicate messages - temporary admin endpoint
+  app.get("/api/cleanup-messages", async (req, res) => {
+    // Temporary: No authentication check for debugging purposes
+    
+    try {
+      // Get all messages
+      const allMessages = await db.select().from(messages);
+      
+      // Track seen messages by content + sender + userId + expertId
+      const seenMessages = new Map();
+      const duplicateIds: number[] = [];
+      
+      // Find duplicates
+      allMessages.forEach(msg => {
+        // Create a unique key for each message
+        const key = `${msg.content}-${msg.sender}-${msg.userId}-${msg.expertId}`;
+        
+        if (seenMessages.has(key)) {
+          // If we've seen this message before, it's a duplicate
+          duplicateIds.push(msg.id);
+        } else {
+          seenMessages.set(key, msg.id);
+        }
+      });
+      
+      // Delete duplicates if any found
+      if (duplicateIds.length > 0) {
+        await db.delete(messages).where(inArray(messages.id, duplicateIds));
+        return res.json({ 
+          success: true, 
+          message: `Removed ${duplicateIds.length} duplicate messages`,
+          removed: duplicateIds
+        });
+      }
+      
+      return res.json({ success: true, message: "No duplicate messages found" });
+    } catch (error) {
+      console.error("Error cleaning up messages:", error);
+      res.status(500).json({ message: "Failed to clean up messages" });
+    }
+  });
+  
   app.post("/api/messages", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
       const messageData = insertMessageSchema.parse(req.body);
+      
+      // First check if this exact message already exists to prevent duplicates
+      const existingMessages = await db
+        .select()
+        .from(messages)
+        .where(
+          and(
+            eq(messages.content, messageData.content),
+            eq(messages.userId, messageData.userId),
+            eq(messages.expertId, messageData.expertId),
+            eq(messages.sender, messageData.sender)
+          )
+        );
+      
+      // If this exact message already exists, return the existing one
+      if (existingMessages.length > 0) {
+        console.log("Preventing duplicate message:", existingMessages[0].id);
+        return res.status(200).json(existingMessages[0]);
+      }
+      
+      // Otherwise create new message
       const message = await storage.createMessage(messageData);
       res.status(201).json(message);
     } catch (err) {

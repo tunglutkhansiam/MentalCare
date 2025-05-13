@@ -126,7 +126,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
-      const appointmentData = insertAppointmentSchema.parse(req.body);
+      // Add the current user's ID to the appointment data
+      const appointmentData = insertAppointmentSchema.parse({
+        ...req.body,
+        userId: req.user.id
+      });
       const appointment = await storage.createAppointment(appointmentData);
       res.status(201).json(appointment);
     } catch (err) {

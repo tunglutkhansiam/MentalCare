@@ -21,6 +21,7 @@ export interface IStorage {
   // Expert methods
   getExperts(categoryId?: number): Promise<Expert[]>;
   getExpert(id: number): Promise<Expert | undefined>;
+  getExpertByUserId(userId: number): Promise<Expert | undefined>;
   createExpert(expert: InsertExpert): Promise<Expert>;
   
   // Specialization methods
@@ -223,6 +224,10 @@ export class MemStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
     return this.usersMap.get(id);
   }
+  
+  async getExpertByUserId(userId: number): Promise<Expert | undefined> {
+    return Array.from(this.expertsMap.values()).find(expert => expert.userId === userId);
+  }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     return Array.from(this.usersMap.values()).find(
@@ -294,6 +299,7 @@ export class MemStorage implements IStorage {
     const newExpert: Expert = { 
       ...expert, 
       id,
+      userId: expert.userId || null,
       profileImage: expert.profileImage || null,
       rating: expert.rating || null,
       reviewCount: expert.reviewCount || null,

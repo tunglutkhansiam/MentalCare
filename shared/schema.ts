@@ -32,6 +32,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
 // Health expert schema
 export const experts = pgTable("experts", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
   name: text("name").notNull(),
   specialty: text("specialty").notNull(),
   about: text("about").notNull(),
@@ -44,6 +45,7 @@ export const experts = pgTable("experts", {
 });
 
 export const insertExpertSchema = createInsertSchema(experts).pick({
+  userId: true,
   name: true,
   specialty: true,
   about: true,

@@ -179,6 +179,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get expert profile with specializations
+  app.get("/api/expert-profile/detailed", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const expert = await storage.getExpertByUserId(req.user.id);
+      if (!expert) {
+        return res.status(404).json({ message: "Expert profile not found" });
+      }
+      
+      // Get specializations for the expert
+      const specializations = await storage.getSpecializationsByExpert(expert.id);
+      
+      // Return combined data
+      res.json({
+        ...expert,
+        specializations
+      });
+    } catch (err) {
+      console.error("Error fetching detailed expert profile:", err);
+      res.status(500).json({ message: "Failed to fetch detailed expert profile" });
+    }
+  });
+  
   // Get user by ID - used by experts to view user information
   app.get("/api/user/:userId", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

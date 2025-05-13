@@ -55,18 +55,23 @@ export function setupWebSocket(httpServer: HttpServer) {
 
           // Broadcast the message to all OTHER connections for this chat
           // We don't send back to the original sender to avoid duplication
-          console.log(`Broadcasting message to connections with userId=${ws.userId} and expertId=${ws.expertId}`);
+          console.log(`Broadcasting message with id=${message.id} from ${message.sender} (userId=${ws.userId}, expertId=${ws.expertId})`);
           
           let broadcastCount = 0;
+          
+          // Find other clients in the same conversation (user-expert pair)
+          // We need to handle both directions of the conversation
           connections.forEach((client) => {
             // Make sure we're only sending to other clients (not back to sender)
-            // and only to clients in the same chat conversation
+            // and only to clients in the same chat conversation (matching both user-expert pair) 
             if (client !== ws && 
                 client.readyState === WebSocket.OPEN && 
-                ((client.userId === ws.userId && client.expertId === ws.expertId) ||
+                ((client.userId === ws.userId && client.expertId === ws.expertId) || 
                  (client.userId === ws.expertId && client.expertId === ws.userId))) {
               
               broadcastCount++;
+              console.log(`Broadcasting to client with userId=${client.userId}, expertId=${client.expertId}`);
+              
               client.send(JSON.stringify({
                 type: 'message',
                 id: message.id,

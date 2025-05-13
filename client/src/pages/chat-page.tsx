@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useLocation } from "wouter";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Send } from "lucide-react";
 import { Expert, User, Message, InsertMessage } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient, getQueryFn } from "@/lib/queryClient";
+import { getQueryFn } from "@/lib/queryClient";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,78 +14,155 @@ import ChatMessage from "@/components/ui/chat-message";
 export default function ChatPage() {
   const { userId, expertId } = useParams();
   const [, navigate] = useLocation();
-  const { user, expert: loggedInExpert, isExpert } = useAuth();
+  const { user, isExpert } = useAuth();
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [message, setMessage] = useState("");
+  const [messageText, setMessageText] = useState("");
   const [socket, setSocket] = useState<WebSocket | null>(null);
-
+  
+  // Use refs to track message state to avoid duplication issues
+  const messagesRef = useRef<Message[]>([]);
+  const seenMessageIds = useRef<Set<number>>(new Set());
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
   // Fetch expert details if user is not an expert
   const { data: chatExpert, isLoading: loadingExpert } = useQuery<Expert>({
     queryKey: [`/api/experts/${expertId}`],
-    enabled: !isExpert, // Only fetch if current user is not an expert
+    enabled: !isExpert && !!expertId,
   });
 
   // Fetch user details if logged in user is an expert
   const { data: chatUser, isLoading: loadingUser } = useQuery<User>({
     queryKey: [`/api/user/${userId}`],
     queryFn: getQueryFn({ on401: "throw" }),
-    enabled: isExpert && !!userId, // Only fetch if current user is an expert
+    enabled: isExpert && !!userId,
   });
-
-  // Fetch previous messages
-  const { data: messages, isLoading: loadingMessages } = useQuery<Message[]>({
-    queryKey: [isExpert ? `/api/expert-messages/${userId}` : `/api/messages/${expertId}`],
-    enabled: !!user?.id && (isExpert ? !!userId : !!expertId),
-    queryFn: getQueryFn({ on401: "throw" }),
-  });
-
-  const sendMessageMutation = useMutation({
-    mutationFn: async (messageData: InsertMessage) => {
-      const res = await apiRequest("POST", "/api/messages", messageData);
-      return await res.json();
-    },
-    onSuccess: (savedMessage) => {
-      setMessage("");
-      
-      // Add the message directly to our cache instead of invalidating the query
-      // This avoids duplicate fetches and UI updates
-      const queryKey = isExpert ? `/api/expert-messages/${userId}` : `/api/messages/${expertId}`;
-      queryClient.setQueryData([queryKey], (oldData: Message[] = []) => {
-        // Only add if not already present (check by id)
-        if (!oldData.some(msg => msg.id === savedMessage.id)) {
-          return [...oldData, savedMessage];
+  
+  // Load initial messages from server
+  useEffect(() => {
+    if (!user?.id || !expertId) return;
+    
+    const fetchMessages = async () => {
+      try {
+        setIsLoading(true);
+        
+        const apiEndpoint = isExpert 
+          ? `/api/expert-messages/${userId}` 
+          : `/api/messages/${expertId}`;
+          
+        const response = await fetch(apiEndpoint);
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch messages");
         }
-        return oldData;
+        
+        const data = await response.json();
+        
+        // Filter out duplicates
+        const uniqueMessages: Message[] = [];
+        const uniqueIds = new Set<number>();
+        
+        data.forEach((msg: Message) => {
+          if (!uniqueIds.has(msg.id) && !seenMessageIds.current.has(msg.id)) {
+            uniqueIds.add(msg.id);
+            seenMessageIds.current.add(msg.id);
+            uniqueMessages.push(msg);
+          }
+        });
+        
+        // Sort by ID to ensure correct order
+        uniqueMessages.sort((a, b) => a.id - b.id);
+        
+        messagesRef.current = uniqueMessages;
+        setMessages(uniqueMessages);
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load messages",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchMessages();
+  }, [user?.id, expertId, userId, isExpert]);
+  
+  // Send message function
+  const sendMessage = async () => {
+    if (!messageText.trim() || !expertId || !user?.id) return;
+    
+    try {
+      // Clear input immediately for better UX
+      const content = messageText;
+      setMessageText("");
+      
+      // Prepare message data
+      const chatUserId = isExpert && userId ? parseInt(userId) : user.id;
+      const messageData: InsertMessage = {
+        userId: chatUserId,
+        expertId: parseInt(expertId),
+        content,
+        sender: isExpert ? "expert" : "user",
+      };
+      
+      // Send to server
+      const response = await fetch("/api/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(messageData),
       });
       
-      // Also send via WebSocket for real-time delivery to the other party
-      if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify({
-          type: "message",
-          ...savedMessage
-        }));
+      if (!response.ok) {
+        throw new Error("Failed to send message");
       }
-    },
-    onError: (error: Error) => {
+      
+      const savedMessage = await response.json();
+      
+      // Update local state only if message is not already present
+      if (!seenMessageIds.current.has(savedMessage.id)) {
+        seenMessageIds.current.add(savedMessage.id);
+        messagesRef.current = [...messagesRef.current, savedMessage];
+        setMessages([...messagesRef.current]);
+        
+        // Notify other clients via WebSocket
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({
+            type: "message",
+            ...savedMessage
+          }));
+        }
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
       toast({
-        title: "Failed to send message",
-        description: error.message,
-        variant: "destructive",
+        title: "Error",
+        description: "Failed to send message",
+        variant: "destructive"
       });
-    },
-  });
-
+    }
+  };
+  
   // Setup WebSocket connection
   useEffect(() => {
     if (!user?.id || !expertId) return;
-
-    // Determine which userId to use in the WebSocket URL
-    const chatUserId = isExpert ? userId : user.id.toString();
     
+    // Close any existing connection
+    if (socket) {
+      socket.close();
+    }
+    
+    // Create WebSocket connection
+    const chatUserId = isExpert ? userId : user.id.toString();
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${window.location.host}/ws?userId=${chatUserId}&expertId=${expertId}`;
     
+    console.log("Connecting to WebSocket:", wsUrl);
     const newSocket = new WebSocket(wsUrl);
     
     newSocket.onopen = () => {
@@ -98,24 +175,20 @@ export default function ChatPage() {
         console.log("WebSocket message received:", data);
         
         if (data.type === "message") {
-          // Only update if we're receiving a message from someone else
-          // (not a message we just sent ourselves)
-          if (data.sender === (isExpert ? "user" : "expert")) {
-            console.log("Adding incoming message to message list");
-            
-            // Add directly to cache instead of triggering a re-fetch
-            const queryKey = isExpert ? `/api/expert-messages/${userId}` : `/api/messages/${expertId}`;
-            queryClient.setQueryData([queryKey], (oldData: Message[] = []) => {
-              // Only add if not already in the list (check by id)
-              if (!oldData.some(msg => msg.id === data.id)) {
-                return [...oldData, data as Message];
-              }
-              return oldData;
-            });
+          console.log("Processing message:", data.id, "Current seen ids:", Array.from(seenMessageIds.current));
+          
+          // Only process if we haven't seen this message before
+          if (!seenMessageIds.current.has(data.id)) {
+            console.log("Adding new message to chat");
+            seenMessageIds.current.add(data.id);
+            messagesRef.current = [...messagesRef.current, data];
+            setMessages([...messagesRef.current]);
+          } else {
+            console.log("Ignoring duplicate message");
           }
         }
-      } catch (err) {
-        console.error("Error parsing WebSocket message:", err);
+      } catch (error) {
+        console.error("Error processing WebSocket message:", error);
       }
     };
     
@@ -135,12 +208,12 @@ export default function ChatPage() {
       }
     };
   }, [user?.id, expertId, userId, isExpert]);
-
+  
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
+  
   const handleBackClick = () => {
     if (isExpert) {
       navigate("/expert-dashboard");
@@ -148,32 +221,17 @@ export default function ChatPage() {
       navigate("/appointments");
     }
   };
-
+  
   const handleSendMessage = () => {
-    if (!message.trim() || !expertId) return;
-    
-    // If the user is not logged in, do nothing
-    if (!user?.id) return;
-
-    // If expert is sending a message to user, we need the userId parameter
-    // If user is sending to expert, we use the user.id from auth context
-    const chatUserId = isExpert && userId ? parseInt(userId) : user.id;
-
-    const messageData: InsertMessage = {
-      userId: chatUserId,
-      expertId: parseInt(expertId),
-      content: message,
-      sender: isExpert ? "expert" : "user",
-    };
-
-    // Send only via API mutation - the WebSocket notification will come from the server
-    sendMessageMutation.mutate(messageData);
+    if (!messageText.trim()) return;
+    sendMessage();
   };
-
+  
+  // Loading state
   if ((isExpert && loadingUser) || (!isExpert && loadingExpert)) {
     return <ChatPageSkeleton />;
   }
-
+  
   const chatPartner = isExpert ? chatUser : chatExpert;
   
   if (!chatPartner) {
@@ -186,16 +244,18 @@ export default function ChatPage() {
       </div>
     );
   }
-
+  
   const renderHeaderContent = () => {
     if (isExpert && chatUser) {
       return (
         <>
           <div className="w-10 h-10 bg-white rounded-full mr-3 flex items-center justify-center text-primary font-bold">
-            {chatUser.firstName?.[0]}{chatUser.lastName?.[0]}
+            {chatUser.firstName?.[0]}{chatUser.lastName?.[0] || chatUser.username?.[0]}
           </div>
           <div>
-            <h1 className="font-semibold">{chatUser.firstName} {chatUser.lastName}</h1>
+            <h1 className="font-semibold">
+              {chatUser.firstName} {chatUser.lastName || chatUser.username}
+            </h1>
             <p className="text-xs text-blue-100">Patient • Online</p>
           </div>
         </>
@@ -208,14 +268,14 @@ export default function ChatPage() {
           </div>
           <div>
             <h1 className="font-semibold">{chatExpert.name}</h1>
-            <p className="text-xs text-blue-100">{chatExpert.specialty} • Online</p>
+            <p className="text-xs text-blue-100">{chatExpert.title} • Online</p>
           </div>
         </>
       );
     }
     return null;
   };
-
+  
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <div className="bg-primary py-4 px-4 text-white">
@@ -228,11 +288,11 @@ export default function ChatPage() {
       </div>
       
       <div className="flex-1 overflow-y-auto p-4 bg-gray-100 space-y-4">
-        {loadingMessages ? (
+        {isLoading ? (
           Array(4).fill(0).map((_, i) => (
             <ChatMessageSkeleton key={i} isUser={i % 2 !== 0} />
           ))
-        ) : messages?.length ? (
+        ) : messages.length > 0 ? (
           messages.map(msg => (
             <ChatMessage 
               key={msg.id} 
@@ -243,7 +303,9 @@ export default function ChatPage() {
         ) : (
           <div className="text-center py-10">
             <p className="text-muted-foreground">
-              Start a conversation with {isExpert ? `${chatUser?.firstName} ${chatUser?.lastName}` : chatExpert?.name}
+              Start a conversation with {isExpert 
+                ? `${chatUser?.firstName || ''} ${chatUser?.lastName || chatUser?.username || ''}` 
+                : chatExpert?.name}
             </p>
           </div>
         )}
@@ -253,8 +315,8 @@ export default function ChatPage() {
       <div className="p-3 bg-white border-t">
         <div className="flex">
           <Input
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            value={messageText}
+            onChange={(e) => setMessageText(e.target.value)}
             placeholder="Type your message..."
             className="flex-1 rounded-r-none"
             onKeyDown={(e) => {
@@ -267,7 +329,7 @@ export default function ChatPage() {
           <Button 
             onClick={handleSendMessage}
             className="rounded-l-none"
-            disabled={!message.trim() || sendMessageMutation.isPending}
+            disabled={!messageText.trim()}
           >
             <Send className="h-5 w-5" />
           </Button>

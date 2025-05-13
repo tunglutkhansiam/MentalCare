@@ -5,7 +5,9 @@ import WebSocket from "ws";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { z } from "zod";
-import { insertAppointmentSchema, insertMessageSchema } from "@shared/schema";
+import { insertAppointmentSchema, insertMessageSchema, questionnaires, questionnaireResponses } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
@@ -218,6 +220,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: err.errors });
       }
       res.status(500).json({ message: "Failed to create message" });
+    }
+  });
+
+  // Questionnaire endpoints
+  app.get("/api/questionnaires", async (req, res) => {
+    try {
+      // Get all questionnaires with their basic details (without full questions for the list view)
+      const allQuestionnaires = await db.select({
+        id: questionnaires.id,
+        title: questionnaires.title,
+        description: questionnaires.description
+      }).from(questionnaires);
+      
+      res.json(allQuestionnaires);
+    } catch (err) {
+      console.error("Error fetching questionnaires:", err);
+      res.status(500).json({ message: "Failed to fetch questionnaires" });
+    }
+  });
+
+  app.get("/api/questionnaires/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const questionnaireId = parseInt(req.params.id);
+      
+      // Get the full questionnaire with questions
+      const [questionnaire] = await db.select().from(questionnaires)
+        .where(eq(questionnaires.id, questionnaireId));
+      
+      if (!questionnaire) {
+        return res.status(404).json({ message: "Questionnaire not found" });
+      }
+      
+      res.json(questionnaire);
+    } catch (err) {
+      console.error("Error fetching questionnaire:", err);
+      res.status(500).json({ message: "Failed to fetch questionnaire" });
+    }
+  });
+
+  app.post("/api/questionnaire-responses", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const responseData = {
+        ...req.body,
+        userId: req.user.id
+      };
+      
+      // Save questionnaire response
+      const [response] = await db.insert(questionnaireResponses)
+        .values(responseData)
+        .returning();
+      
+      res.status(201).json(response);
+    } catch (err) {
+      console.error("Error saving questionnaire response:", err);
+      res.status(500).json({ message: "Failed to save questionnaire response" });
+    }
+  });
+
+  app.get("/api/user/questionnaire-responses", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      // Get all responses by the current user with questionnaire details
+      const userResponses = await db.select({
+        response: questionnaireResponses,
+        questionnaire: {
+          id: questionnaires.id,
+          title: questionnaires.title
+        }
+      })
+      .from(questionnaireResponses)
+      .innerJoin(questionnaires, eq(questionnaires.id, questionnaireResponses.questionnaireId))
+      .where(eq(questionnaireResponses.userId, req.user.id))
+      .orderBy(desc(questionnaireResponses.completedAt));
+      
+      res.json(userResponses);
+    } catch (err) {
+      console.error("Error fetching user questionnaire responses:", err);
+      res.status(500).json({ message: "Failed to fetch responses" });
     }
   });
 

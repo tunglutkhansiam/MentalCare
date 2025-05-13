@@ -53,17 +53,9 @@ export function setupWebSocket(httpServer: HttpServer) {
             return;
           }
 
-          // Create a message in the database
-          const messageData: InsertMessage = {
-            userId: ws.userId!,
-            expertId: ws.expertId!,
-            content: message.content,
-            sender: message.sender
-          };
-          
-          const savedMessage = await storage.createMessage(messageData);
-          
           // Broadcast the message to all connections for this chat
+          // Note: We don't create a message in the database here anymore
+          // because messages are created via the API endpoint
           connections.forEach((client) => {
             if (client !== ws && 
                 client.readyState === WebSocket.OPEN && 
@@ -71,7 +63,12 @@ export function setupWebSocket(httpServer: HttpServer) {
                 client.expertId === ws.expertId) {
               client.send(JSON.stringify({
                 type: 'message',
-                ...savedMessage
+                id: message.id,
+                userId: ws.userId!,
+                expertId: ws.expertId!,
+                content: message.content,
+                sender: message.sender,
+                timestamp: message.timestamp || new Date()
               }));
             }
           });

@@ -45,11 +45,21 @@ export default function ChatPage() {
       const res = await apiRequest("POST", "/api/messages", messageData);
       return await res.json();
     },
-    onSuccess: () => {
+    onSuccess: (savedMessage) => {
       setMessage("");
+      
+      // Invalidate the query to refresh the message list
       queryClient.invalidateQueries({ 
         queryKey: [isExpert ? `/api/expert-messages/${userId}` : `/api/messages/${expertId}`] 
       });
+      
+      // Also send via WebSocket for real-time delivery to the other party
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+          type: "message",
+          ...savedMessage
+        }));
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -137,15 +147,8 @@ export default function ChatPage() {
       sender: isExpert ? "expert" : "user",
     };
 
+    // Send only via API mutation - the WebSocket notification will come from the server
     sendMessageMutation.mutate(messageData);
-
-    // Also try to send via WebSocket for real-time delivery
-    if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify({
-        type: "message",
-        ...messageData
-      }));
-    }
   };
 
   if ((isExpert && loadingUser) || (!isExpert && loadingExpert)) {

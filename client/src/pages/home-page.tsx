@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import MobileLayout from "@/components/layouts/mobile-layout";
 import { Card, CardContent } from "@/components/ui/card";
-import { Expert, Category } from "@shared/schema";
+import { Expert, Category, Appointment } from "@shared/schema";
 import ExpertCard from "@/components/ui/expert-card";
 import CategoryCard from "@/components/ui/category-card";
 import AppointmentCard from "@/components/ui/appointment-card";

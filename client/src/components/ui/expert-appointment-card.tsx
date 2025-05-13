@@ -12,7 +12,7 @@ interface ExpertAppointmentCardProps {
   isPast?: boolean;
 }
 
-export function ExpertAppointmentCard({ 
+export default function ExpertAppointmentCard({ 
   appointment, 
   isPast = false 
 }: ExpertAppointmentCardProps) {

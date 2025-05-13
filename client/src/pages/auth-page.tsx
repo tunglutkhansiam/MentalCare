@@ -109,7 +109,7 @@ export default function AuthPage() {
         </div>
 
         <Tabs defaultValue="login" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2 mb-8">
+          <TabsList className="grid w-full grid-cols-2 mb-8 bg-white/90 backdrop-blur-sm shadow">
             <TabsTrigger value="login">Login</TabsTrigger>
             <TabsTrigger value="register">Register</TabsTrigger>
           </TabsList>
@@ -183,7 +183,7 @@ export default function AuthPage() {
           </TabsContent>
 
           <TabsContent value="register">
-            <Card>
+            <Card className="bg-white/95 backdrop-blur-sm shadow-lg">
               <CardContent className="pt-6">
                 <Form {...registerForm}>
                   <form

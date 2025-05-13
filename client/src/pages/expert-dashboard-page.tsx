@@ -17,6 +17,7 @@ import ExpertAppointmentCard from "../components/ui/expert-appointment-card";
 import { useLocation } from "wouter";
 
 type ExpertAppointment = Appointment & { user: User };
+type ChatThread = Message & { user: User };
 
 export default function ExpertDashboardPage() {
   const { user, expert, isExpert } = useAuth();
@@ -33,22 +34,41 @@ export default function ExpertDashboardPage() {
 
   const {
     data: appointments,
-    isLoading,
-    error,
+    isLoading: loadingAppointments,
+    error: appointmentsError,
   } = useQuery<ExpertAppointment[], Error>({
     queryKey: ["/api/expert/appointments"],
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
+  const {
+    data: chatThreads,
+    isLoading: loadingChats,
+    error: chatsError,
+  } = useQuery<ChatThread[], Error>({
+    queryKey: ["/api/expert/chats"],
+    queryFn: getQueryFn({ on401: "throw" }),
+  });
+
+  const isLoading = loadingAppointments || loadingChats;
+
   if (isLoading) {
     return <ExpertDashboardSkeleton />;
   }
 
-  if (error) {
+  if (appointmentsError) {
     toast({
       variant: "destructive",
       title: "Error loading appointments",
-      description: error.message,
+      description: appointmentsError.message,
+    });
+  }
+
+  if (chatsError) {
+    toast({
+      variant: "destructive",
+      title: "Error loading chat threads",
+      description: chatsError.message,
     });
   }
 
@@ -59,6 +79,16 @@ export default function ExpertDashboardPage() {
   const pastAppointments = appointments?.filter(appointment => 
     appointment.status === "completed" || appointment.status === "cancelled"
   ) || [];
+
+  function getInitials(firstName: string, lastName: string) {
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  }
+
+  const handleChatClick = (userId: number) => {
+    if (expert) {
+      setLocation(`/chat/${userId}/${expert.id}`);
+    }
+  };
 
   return (
     <MobileLayout>
@@ -78,14 +108,18 @@ export default function ExpertDashboardPage() {
                 <Badge variant="outline" className="text-sm">
                   {pastAppointments.length} Past
                 </Badge>
+                <Badge variant="outline" className="text-sm">
+                  {chatThreads?.length || 0} Messages
+                </Badge>
               </div>
             </CardContent>
           </Card>
 
           <Tabs defaultValue="upcoming" className="w-full" onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
               <TabsTrigger value="past">Past</TabsTrigger>
+              <TabsTrigger value="messages">Messages</TabsTrigger>
             </TabsList>
             <TabsContent value="upcoming" className="mt-4 space-y-4">
               {upcomingAppointments.length === 0 ? (
@@ -116,6 +150,45 @@ export default function ExpertDashboardPage() {
                 ))
               )}
             </TabsContent>
+            <TabsContent value="messages" className="mt-4 space-y-4">
+              {!chatThreads || chatThreads.length === 0 ? (
+                <div className="text-center p-6 bg-muted/50 rounded-lg">
+                  <p className="text-muted-foreground">No message threads</p>
+                </div>
+              ) : (
+                chatThreads.map((thread) => (
+                  <Card key={thread.userId} className="overflow-hidden">
+                    <CardContent className="p-0">
+                      <button 
+                        className="w-full text-left p-4 hover:bg-muted/50 transition-colors"
+                        onClick={() => handleChatClick(thread.userId)}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <Avatar className="h-10 w-10 border">
+                            <AvatarFallback>
+                              {getInitials(thread.user.firstName, thread.user.lastName)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-baseline">
+                              <p className="font-medium truncate">
+                                {thread.user.firstName} {thread.user.lastName}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {thread.timestamp ? format(new Date(thread.timestamp), 'MMM d, h:mm a') : ''}
+                              </p>
+                            </div>
+                            <p className="text-sm text-muted-foreground truncate">
+                              {thread.content}
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </TabsContent>
           </Tabs>
         </div>
       </div>
@@ -130,7 +203,8 @@ function ExpertDashboardSkeleton() {
         <div className="flex flex-col space-y-4">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-32 w-full" />
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
+            <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
           </div>

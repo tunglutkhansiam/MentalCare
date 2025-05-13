@@ -377,28 +377,49 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getMessagesByExpert(expertId: number): Promise<(Message & { user: User })[]> {
+    // Fetch messages and users separately to avoid typing issues
     const expertMessages = await db
-      .select({
-        ...messages,
-        user: users
-      })
+      .select()
       .from(messages)
-      .innerJoin(users, eq(messages.userId, users.id))
       .where(eq(messages.expertId, expertId))
       .orderBy(messages.timestamp);
     
-    return expertMessages.map(row => ({
-      ...row,
-      user: {
-        id: row.user.id,
-        username: row.user.username, 
-        firstName: row.user.firstName,
-        lastName: row.user.lastName,
-        email: row.user.email,
-        password: row.user.password,
-        dateOfBirth: row.user.dateOfBirth
+    const result: (Message & { user: User })[] = [];
+    
+    // For each message, fetch the user and combine the data
+    for (const message of expertMessages) {
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, message.userId));
+      
+      if (user) {
+        // Create a fully typed user object with all required properties
+        const typedUser: User = {
+          id: user.id,
+          username: user.username,
+          password: user.password,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          dateOfBirth: user.dateOfBirth,
+          bloodType: user.bloodType,
+          height: user.height,
+          weight: user.weight,
+          allergies: user.allergies,
+          chronicConditions: user.chronicConditions,
+          phoneNumber: user.phoneNumber,
+          profileImage: user.profileImage
+        };
+        
+        result.push({
+          ...message,
+          user: typedUser
+        });
       }
-    }));
+    }
+    
+    return result;
   }
   
   async createMessage(message: InsertMessage): Promise<Message> {

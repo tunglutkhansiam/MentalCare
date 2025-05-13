@@ -338,24 +338,26 @@ export default function HomePage() {
               )}
             </div>
 
-            {/* Mental Health Questionnaires */}
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold mb-3">Mental Health Assessments</h2>
-              
-              <div className="space-y-4">
-                {questionnaires?.length ? (
-                  questionnaires.map(questionnaire => (
-                    <QuestionnaireCard key={questionnaire.id} questionnaire={questionnaire} />
-                  ))
-                ) : (
-                  <Card>
-                    <CardContent className="p-4 text-center py-8">
-                      <p className="text-muted-foreground">No assessments available</p>
-                    </CardContent>
-                  </Card>
-                )}
+            {/* Mental Health Questionnaires - Only shown to regular users */}
+            {!isExpert && (
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold mb-3">Mental Health Assessments</h2>
+                
+                <div className="space-y-4">
+                  {questionnaires?.length ? (
+                    questionnaires.map(questionnaire => (
+                      <QuestionnaireCard key={questionnaire.id} questionnaire={questionnaire} />
+                    ))
+                  ) : (
+                    <Card>
+                      <CardContent className="p-4 text-center py-8">
+                        <p className="text-muted-foreground">No assessments available</p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </>
         )}
       </div>

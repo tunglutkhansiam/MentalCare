@@ -35,8 +35,8 @@ export default function ChatPage() {
 
   // Fetch previous messages
   const { data: messages, isLoading: loadingMessages } = useQuery<Message[]>({
-    queryKey: [`/api/messages/${isExpert ? userId : expertId}`],
-    enabled: !!expertId && !!user?.id && (isExpert ? !!userId : true),
+    queryKey: [isExpert ? `/api/expert-messages/${userId}` : `/api/messages/${expertId}`],
+    enabled: !!user?.id && (isExpert ? !!userId : !!expertId),
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
@@ -47,7 +47,9 @@ export default function ChatPage() {
     },
     onSuccess: () => {
       setMessage("");
-      queryClient.invalidateQueries({ queryKey: [`/api/messages/${isExpert ? userId : expertId}`] });
+      queryClient.invalidateQueries({ 
+        queryKey: [isExpert ? `/api/expert-messages/${userId}` : `/api/messages/${expertId}`] 
+      });
     },
     onError: (error: Error) => {
       toast({
@@ -79,7 +81,9 @@ export default function ChatPage() {
         const data = JSON.parse(event.data);
         if (data.type === "message") {
           // Invalidate the query to refresh messages
-          queryClient.invalidateQueries({ queryKey: [`/api/messages/${isExpert ? userId : expertId}`] });
+          queryClient.invalidateQueries({ 
+            queryKey: [isExpert ? `/api/expert-messages/${userId}` : `/api/messages/${expertId}`] 
+          });
         }
       } catch (err) {
         console.error("Error parsing WebSocket message:", err);

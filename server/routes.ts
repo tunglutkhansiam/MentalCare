@@ -258,7 +258,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Chat messages - for experts to get messages with a specific user
-  app.get("/api/messages/:userId", async (req, res) => {
+  app.get("/api/expert-messages/:userId", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {

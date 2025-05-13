@@ -4,12 +4,14 @@ import {
   useMutation,
   UseMutationResult,
 } from "@tanstack/react-query";
-import { insertUserSchema, User as SelectUser, InsertUser } from "@shared/schema";
+import { insertUserSchema, User as SelectUser, InsertUser, Expert as SelectExpert } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 type AuthContextType = {
   user: SelectUser | null;
+  expert: SelectExpert | null;
+  isExpert: boolean;
   isLoading: boolean;
   error: Error | null;
   loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
@@ -25,10 +27,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const {
     data: user,
     error,
-    isLoading,
+    isLoading: isUserLoading,
   } = useQuery<SelectUser | null, Error>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
+  });
+  
+  const {
+    data: expert,
+    isLoading: isExpertLoading,
+  } = useQuery<SelectExpert | null, Error>({
+    queryKey: ["/api/expert-profile"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: !!user, // Only fetch expert data if user is logged in
   });
 
   const loginMutation = useMutation({
@@ -92,10 +103,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
+  const isLoading = isUserLoading || (!!user && isExpertLoading);
+  const isExpert = !!expert;
+
   return (
     <AuthContext.Provider
       value={{
         user: user ?? null,
+        expert: expert ?? null,
+        isExpert,
         isLoading,
         error,
         loginMutation,

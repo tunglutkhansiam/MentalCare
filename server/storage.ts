@@ -188,6 +188,7 @@ export class MemStorage implements IStorage {
     });
     
     const expert3 = await this.createExpert({
+      userId: expertUser3.id,
       name: "Dr. Rebecca Miller",
       specialty: "Psychotherapist",
       about: "Dr. Miller is a respected psychotherapist focused on women's mental health and trauma-informed care. She combines evidence-based approaches with a patient-centered philosophy to help manage and overcome emotional challenges.",
@@ -200,6 +201,7 @@ export class MemStorage implements IStorage {
     });
 
     const expert4 = await this.createExpert({
+      userId: expertUser4.id,
       name: "Dr. Thomas Nguyen",
       specialty: "Mental Health Counselor",
       about: "Dr. Nguyen provides comprehensive mental health counseling for all ages. He emphasizes preventive strategies and developing resilience, with special expertise in family therapy and relationship issues.",

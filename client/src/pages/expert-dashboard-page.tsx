@@ -1,15 +1,16 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
-import { Appointment, User } from "@shared/schema";
+import { Appointment, User, Message } from "@shared/schema";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { formatDistance } from "date-fns";
+import { formatDistance, format } from "date-fns";
 import MobileLayout from "@/components/layouts/mobile-layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Calendar, Clock, FileText, MessageCircle, User as UserIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import ExpertAppointmentCard from "../components/ui/expert-appointment-card";

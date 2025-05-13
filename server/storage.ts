@@ -40,6 +40,7 @@ export interface IStorage {
   
   // Message methods
   getMessagesByUserAndExpert(userId: number, expertId: number): Promise<Message[]>;
+  getMessagesByExpert(expertId: number): Promise<(Message & { user: User })[]>;
   createMessage(message: InsertMessage): Promise<Message>;
   
   // Category methods
@@ -373,6 +374,31 @@ export class DatabaseStorage implements IStorage {
       .orderBy(messages.timestamp);
     
     return userMessages;
+  }
+  
+  async getMessagesByExpert(expertId: number): Promise<(Message & { user: User })[]> {
+    const expertMessages = await db
+      .select({
+        ...messages,
+        user: users
+      })
+      .from(messages)
+      .innerJoin(users, eq(messages.userId, users.id))
+      .where(eq(messages.expertId, expertId))
+      .orderBy(messages.timestamp);
+    
+    return expertMessages.map(row => ({
+      ...row,
+      user: {
+        id: row.user.id,
+        username: row.user.username, 
+        firstName: row.user.firstName,
+        lastName: row.user.lastName,
+        email: row.user.email,
+        password: row.user.password,
+        dateOfBirth: row.user.dateOfBirth
+      }
+    }));
   }
   
   async createMessage(message: InsertMessage): Promise<Message> {

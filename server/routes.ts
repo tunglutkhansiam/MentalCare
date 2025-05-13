@@ -306,5 +306,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get expert chat threads
+  app.get("/api/expert/chats", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      // First check if user is an expert
+      const expert = await storage.getExpertByUserId(req.user.id);
+      if (!expert) {
+        return res.status(403).json({ message: "Access denied: Not an expert" });
+      }
+      
+      // In a real application, this would be a more optimized query to get unique users
+      // with their latest message for this expert
+      const allMessages = await storage.getMessagesByExpert(expert.id);
+      
+      // Group messages by user and get the most recent ones
+      const userMap = new Map();
+      
+      for (const message of allMessages) {
+        const messageDate = message.timestamp ? new Date(message.timestamp) : new Date();
+        const existingMessage = userMap.get(message.userId);
+        const existingDate = existingMessage && existingMessage.timestamp ? 
+          new Date(existingMessage.timestamp) : new Date(0);
+        
+        if (!userMap.has(message.userId) || messageDate > existingDate) {
+          userMap.set(message.userId, message);
+        }
+      }
+      
+      const chatThreads = Array.from(userMap.values());
+      res.json(chatThreads);
+    } catch (err) {
+      console.error("Error fetching expert chats:", err);
+      res.status(500).json({ message: "Failed to fetch chat threads" });
+    }
+  });
+
   return httpServer;
 }

@@ -61,8 +61,11 @@ export default function ChatPage() {
   useEffect(() => {
     if (!user?.id || !expertId) return;
 
+    // Determine which userId to use in the WebSocket URL
+    const chatUserId = isExpert ? userId : user.id.toString();
+    
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws?userId=${user.id}&expertId=${expertId}`;
+    const wsUrl = `${protocol}//${window.location.host}/ws?userId=${chatUserId}&expertId=${expertId}`;
     
     const newSocket = new WebSocket(wsUrl);
     
@@ -97,7 +100,7 @@ export default function ChatPage() {
         newSocket.close();
       }
     };
-  }, [user?.id, expertId]);
+  }, [user?.id, expertId, userId, isExpert]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -105,7 +108,11 @@ export default function ChatPage() {
   }, [messages]);
 
   const handleBackClick = () => {
-    navigate("/appointments");
+    if (isExpert) {
+      navigate("/expert-dashboard");
+    } else {
+      navigate("/appointments");
+    }
   };
 
   const handleSendMessage = () => {
@@ -114,8 +121,12 @@ export default function ChatPage() {
     // If the user is not logged in, do nothing
     if (!user?.id) return;
 
+    // If expert is sending a message to user, we need the userId parameter
+    // If user is sending to expert, we use the user.id from auth context
+    const chatUserId = isExpert && userId ? parseInt(userId) : user.id;
+
     const messageData: InsertMessage = {
-      userId: isExpert ? parseInt(userId) : user.id,
+      userId: chatUserId,
       expertId: parseInt(expertId),
       content: message,
       sender: isExpert ? "expert" : "user",
@@ -132,20 +143,51 @@ export default function ChatPage() {
     }
   };
 
-  if (loadingExpert) {
+  if ((isExpert && loadingUser) || (!isExpert && loadingExpert)) {
     return <ChatPageSkeleton />;
   }
 
-  if (!expert) {
+  const chatPartner = isExpert ? chatUser : chatExpert;
+  
+  if (!chatPartner) {
     return (
       <div className="p-4 text-center">
-        <p>Expert not found</p>
+        <p>{isExpert ? "User" : "Expert"} not found</p>
         <Button onClick={() => navigate("/")} className="mt-4">
           Back to Home
         </Button>
       </div>
     );
   }
+
+  const renderHeaderContent = () => {
+    if (isExpert && chatUser) {
+      return (
+        <>
+          <div className="w-10 h-10 bg-white rounded-full mr-3 flex items-center justify-center text-primary font-bold">
+            {chatUser.firstName?.[0]}{chatUser.lastName?.[0]}
+          </div>
+          <div>
+            <h1 className="font-semibold">{chatUser.firstName} {chatUser.lastName}</h1>
+            <p className="text-xs text-blue-100">Patient • Online</p>
+          </div>
+        </>
+      );
+    } else if (!isExpert && chatExpert) {
+      return (
+        <>
+          <div className="w-10 h-10 bg-white rounded-full mr-3 flex items-center justify-center text-primary font-bold">
+            {chatExpert.name.split(' ').map((n: string) => n[0]).join('')}
+          </div>
+          <div>
+            <h1 className="font-semibold">{chatExpert.name}</h1>
+            <p className="text-xs text-blue-100">{chatExpert.specialty} • Online</p>
+          </div>
+        </>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
@@ -154,13 +196,7 @@ export default function ChatPage() {
           <button onClick={handleBackClick} className="mr-3">
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <div className="w-10 h-10 bg-white rounded-full mr-3 flex items-center justify-center text-primary font-bold">
-            {expert.name.split(' ').map(n => n[0]).join('')}
-          </div>
-          <div>
-            <h1 className="font-semibold">{expert.name}</h1>
-            <p className="text-xs text-blue-100">{expert.specialty} • Online</p>
-          </div>
+          {renderHeaderContent()}
         </div>
       </div>
       
@@ -174,13 +210,13 @@ export default function ChatPage() {
             <ChatMessage 
               key={msg.id} 
               message={msg} 
-              isUser={msg.sender === "user"} 
+              isUser={isExpert ? msg.sender === "expert" : msg.sender === "user"} 
             />
           ))
         ) : (
           <div className="text-center py-10">
             <p className="text-muted-foreground">
-              Start a conversation with {expert.name}
+              Start a conversation with {isExpert ? `${chatUser?.firstName} ${chatUser?.lastName}` : chatExpert?.name}
             </p>
           </div>
         )}

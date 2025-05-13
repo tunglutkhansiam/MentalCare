@@ -178,6 +178,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch expert profile" });
     }
   });
+  
+  // Get user by ID - used by experts to view user information
+  app.get("/api/user/:userId", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      // First verify the requester is an expert
+      const expert = await storage.getExpertByUserId(req.user.id);
+      if (!expert) {
+        return res.status(403).json({ message: "Access denied: Only experts can view user profiles" });
+      }
+      
+      const userId = parseInt(req.params.userId);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(user);
+    } catch (err) {
+      console.error("Error fetching user:", err);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
 
   // Expert appointments
   app.get("/api/expert/appointments", async (req, res) => {

@@ -28,6 +28,7 @@ function Router() {
       <ProtectedRoute path="/book-appointment/:expertId" component={AppointmentBookingPage} />
       <ProtectedRoute path="/appointments" component={AppointmentsPage} />
       <ProtectedRoute path="/chat/:userId/:expertId" component={ChatPage} />
+      <ProtectedRoute path="/chat/:expertId" component={ChatPage} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/questionnaire/:id" component={QuestionnairePage} />
       <Route component={NotFound} />

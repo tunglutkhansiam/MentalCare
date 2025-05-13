@@ -9,7 +9,7 @@ export function ProtectedRoute({
   path: string;
   component: () => React.JSX.Element;
 }) {
-  const { user, isLoading } = useAuth();
+  const { user, expert, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -25,6 +25,15 @@ export function ProtectedRoute({
     return (
       <Route path={path}>
         <Redirect to="/auth" />
+      </Route>
+    );
+  }
+  
+  // If expert is trying to access the home page, redirect to expert dashboard
+  if (expert && path === "/") {
+    return (
+      <Route path={path}>
+        <Redirect to="/expert-dashboard" />
       </Route>
     );
   }

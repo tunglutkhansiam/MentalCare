@@ -4,20 +4,26 @@ import MobileLayout from "@/components/layouts/mobile-layout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Appointment, Expert } from "@shared/schema";
 import AppointmentCard from "@/components/ui/appointment-card";
+import { useAuth } from "@/hooks/use-auth";
 
 type AppointmentWithExpert = Appointment & { expert: Expert };
 
 export default function AppointmentsPage() {
   const [, navigate] = useLocation();
 
+  // Get current user
+  const { user } = useAuth();
+  
   // Fetch upcoming appointments
   const { data: upcomingAppointments, isLoading: loadingUpcoming } = useQuery<AppointmentWithExpert[]>({
-    queryKey: ["/api/appointments/upcoming/all"],
+    queryKey: ["/api/appointments/upcoming/all", user?.id],
+    enabled: !!user?.id, // Only run query when user ID is available
   });
 
   // Fetch past appointments
   const { data: pastAppointments, isLoading: loadingPast } = useQuery<AppointmentWithExpert[]>({
-    queryKey: ["/api/appointments/past"],
+    queryKey: ["/api/appointments/past", user?.id],
+    enabled: !!user?.id, // Only run query when user ID is available
   });
 
   return (

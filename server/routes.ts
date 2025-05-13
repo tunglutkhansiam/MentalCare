@@ -100,25 +100,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Appointments
   app.get("/api/appointments", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
+    console.log(`Getting all appointments for user ID: ${req.user.id}`);
     const appointments = await storage.getAppointmentsByUser(req.user.id);
+    console.log(`Found ${appointments.length} appointments for user ${req.user.id}`);
     res.json(appointments);
   });
 
   app.get("/api/appointments/upcoming", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
+    console.log(`Getting next upcoming appointment for user ID: ${req.user.id}`);
     const appointment = await storage.getNextUpcomingAppointment(req.user.id);
+    console.log(`Found upcoming appointment: ${appointment ? 'Yes' : 'None'} for user ${req.user.id}`);
     res.json(appointment);
   });
 
   app.get("/api/appointments/upcoming/all", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
+    console.log(`Getting all upcoming appointments for user ID: ${req.user.id}`);
     const appointments = await storage.getUpcomingAppointments(req.user.id);
+    console.log(`Found ${appointments.length} upcoming appointments for user ${req.user.id}`);
     res.json(appointments);
   });
 
   app.get("/api/appointments/past", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
+    console.log(`Getting past appointments for user ID: ${req.user.id}`);
     const appointments = await storage.getPastAppointments(req.user.id);
+    console.log(`Found ${appointments.length} past appointments for user ${req.user.id}`);
     res.json(appointments);
   });
 

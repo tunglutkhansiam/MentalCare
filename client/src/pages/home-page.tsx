@@ -28,7 +28,8 @@ export default function HomePage() {
   
   // Fetch upcoming appointments
   const { data: upcomingAppointment, isLoading: loadingAppointment } = useQuery<(Appointment & { expert: Expert }) | undefined>({
-    queryKey: ["/api/appointments/upcoming"],
+    queryKey: ["/api/appointments/upcoming", user?.id],
+    enabled: !!user?.id, // Only run query when user ID is available
   });
 
   const handleFindExpert = () => {

@@ -260,6 +260,11 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getAppointmentsByUser(userId: number): Promise<(Appointment & { expert: Expert })[]> {
+    if (!userId) {
+      console.warn("getAppointmentsByUser called with invalid userId:", userId);
+      return [];
+    }
+    
     // First get appointments for this specific user
     const userAppointments = await db.select().from(appointments).where(eq(appointments.userId, userId));
     
@@ -273,6 +278,7 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
+    console.log(`Found ${result.length} appointments for user ${userId}`);
     return result;
   }
   

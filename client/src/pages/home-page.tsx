@@ -4,11 +4,10 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import MobileLayout from "@/components/layouts/mobile-layout";
 import { Card, CardContent } from "@/components/ui/card";
-import { Expert, Category, Appointment } from "@shared/schema";
-import ExpertCard from "@/components/ui/expert-card";
-import CategoryCard from "@/components/ui/category-card";
+import { Expert, Category, Appointment, Questionnaire } from "@shared/schema";
 import AppointmentCard from "@/components/ui/appointment-card";
-import { Briefcase, Search } from "lucide-react";
+import QuestionnaireCard, { QuestionnaireCardSkeleton } from "@/components/ui/questionnaire-card";
+import { Briefcase } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 
@@ -16,14 +15,9 @@ export default function HomePage() {
   const [, navigate] = useLocation();
   const { user, isExpert } = useAuth();
   
-  // Fetch categories
-  const { data: categories, isLoading: loadingCategories } = useQuery<Category[]>({
-    queryKey: ["/api/categories"],
-  });
-  
-  // Fetch top experts
-  const { data: experts, isLoading: loadingExperts } = useQuery<Expert[]>({
-    queryKey: ["/api/experts"],
+  // Fetch questionnaires
+  const { data: questionnaires, isLoading: loadingQuestionnaires } = useQuery<Pick<Questionnaire, "id" | "title" | "description">[]>({
+    queryKey: ["/api/questionnaires"],
   });
   
   // Fetch upcoming appointments
@@ -31,11 +25,6 @@ export default function HomePage() {
     queryKey: ["/api/appointments/upcoming", user?.id],
     enabled: !!user?.id, // Only run query when user ID is available
   });
-
-  const handleFindExpert = () => {
-    // Navigate to experts list page
-    navigate("/experts");
-  };
 
   const handleViewAppointments = () => {
     navigate("/appointments");
@@ -69,7 +58,7 @@ export default function HomePage() {
         <div className={`grid ${isExpert ? 'grid-cols-3' : 'grid-cols-2'} gap-4 mb-6`}>
           <Card 
             className="cursor-pointer hover:shadow-md transition-shadow" 
-            onClick={handleFindExpert}
+            onClick={() => navigate("/experts")}
           >
             <CardContent className="p-4 flex flex-col items-center justify-center text-center">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-2">
@@ -120,7 +109,7 @@ export default function HomePage() {
                 <p className="text-muted-foreground">No upcoming appointments</p>
                 <button 
                   className="mt-2 text-primary font-medium"
-                  onClick={handleFindExpert}
+                  onClick={() => navigate("/experts")}
                 >
                   Book an appointment
                 </button>
@@ -129,39 +118,25 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* Health Expert Categories */}
+        {/* Mental Health Questionnaires */}
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-3">Find Health Experts</h2>
+          <h2 className="text-lg font-semibold mb-3">Mental Health Assessments</h2>
           
-          <div className="flex space-x-3 overflow-x-auto pb-2">
-            {loadingCategories ? (
-              Array(4).fill(0).map((_, i) => <CategoryCardSkeleton key={i} />)
-            ) : (
-              categories?.map(category => (
-                <CategoryCard key={category.id} category={category} />
+          <div className="space-y-4">
+            {loadingQuestionnaires ? (
+              Array(4).fill(0).map((_, i) => <QuestionnaireCardSkeleton key={i} />)
+            ) : questionnaires?.length ? (
+              questionnaires.map(questionnaire => (
+                <QuestionnaireCard key={questionnaire.id} questionnaire={questionnaire} />
               ))
+            ) : (
+              <Card>
+                <CardContent className="p-4 text-center py-8">
+                  <p className="text-muted-foreground">No assessments available</p>
+                </CardContent>
+              </Card>
             )}
           </div>
-        </div>
-
-        {/* Find health experts card */}
-        <div className="mb-6">
-          <Card 
-            className="cursor-pointer hover:shadow-md transition-shadow"
-            onClick={handleFindExpert}
-          >
-            <CardContent className="p-4">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-                  <Search className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-medium">Find Mental Health Experts</h3>
-                  <p className="text-sm text-muted-foreground">Browse certified therapists, counselors and psychologists</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </MobileLayout>

@@ -103,19 +103,29 @@ export default function AuthPage() {
       }}
     >
       <div className="w-full max-w-md">
-        <div className="text-center mb-8 bg-white/90 p-4 rounded-lg backdrop-blur-sm">
-          <h1 className="text-3xl font-bold text-primary mb-2">MentalCare</h1>
-          <p className="text-muted-foreground">Mental health consultation at your fingertips</p>
+        <div className="text-center mb-8 bg-white/90 p-6 rounded-lg backdrop-blur-sm shadow-lg">
+          <h1 className="text-4xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600">MentalCare</h1>
+          <p className="text-muted-foreground text-lg">Mental health consultation at your fingertips</p>
         </div>
 
         <Tabs defaultValue="login" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2 mb-8 bg-white/90 backdrop-blur-sm shadow">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="register">Register</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 mb-8 bg-white/95 backdrop-blur-sm shadow-md rounded-lg p-1">
+            <TabsTrigger 
+              value="login" 
+              className="data-[state=active]:bg-primary data-[state=active]:text-white font-medium"
+            >
+              Login
+            </TabsTrigger>
+            <TabsTrigger 
+              value="register" 
+              className="data-[state=active]:bg-primary data-[state=active]:text-white font-medium"
+            >
+              Register
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="login">
-            <Card className="bg-white/95 backdrop-blur-sm shadow-lg">
+            <Card className="bg-amber-50/95 backdrop-blur-sm shadow-lg border-amber-100">
               <CardContent className="pt-6">
                 <Form {...loginForm}>
                   <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
@@ -171,7 +181,7 @@ export default function AuthPage() {
 
                     <Button 
                       type="submit"
-                      className="w-full" 
+                      className="w-full bg-amber-600 hover:bg-amber-700 text-white" 
                       disabled={loginMutation.isPending}
                     >
                       {loginMutation.isPending ? "Logging in..." : "Log in"}

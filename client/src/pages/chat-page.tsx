@@ -2,27 +2,35 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { ArrowLeft, Send } from "lucide-react";
-import { Expert, Message, InsertMessage } from "@shared/schema";
+import { Expert, User, Message, InsertMessage } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, getQueryFn } from "@/lib/queryClient";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import ChatMessage from "@/components/ui/chat-message";
 
 export default function ChatPage() {
-  const { expertId } = useParams();
+  const { userId, expertId } = useParams();
   const [, navigate] = useLocation();
-  const { user } = useAuth();
+  const { user, expert: loggedInExpert, isExpert } = useAuth();
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [message, setMessage] = useState("");
   const [socket, setSocket] = useState<WebSocket | null>(null);
 
-  // Fetch expert details
-  const { data: expert, isLoading: loadingExpert } = useQuery<Expert>({
+  // Fetch expert details if user is not an expert
+  const { data: chatExpert, isLoading: loadingExpert } = useQuery<Expert>({
     queryKey: [`/api/experts/${expertId}`],
+    enabled: !isExpert, // Only fetch if current user is not an expert
+  });
+
+  // Fetch user details if logged in user is an expert
+  const { data: chatUser, isLoading: loadingUser } = useQuery<User>({
+    queryKey: [`/api/user/${userId}`],
+    queryFn: getQueryFn({ on401: "throw" }),
+    enabled: isExpert && !!userId, // Only fetch if current user is an expert
   });
 
   // Fetch previous messages
@@ -101,13 +109,16 @@ export default function ChatPage() {
   };
 
   const handleSendMessage = () => {
-    if (!message.trim() || !user?.id || !expertId) return;
+    if (!message.trim() || !expertId) return;
+    
+    // If the user is not logged in, do nothing
+    if (!user?.id) return;
 
     const messageData: InsertMessage = {
-      userId: user.id,
+      userId: isExpert ? parseInt(userId) : user.id,
       expertId: parseInt(expertId),
       content: message,
-      sender: "user",
+      sender: isExpert ? "expert" : "user",
     };
 
     sendMessageMutation.mutate(messageData);

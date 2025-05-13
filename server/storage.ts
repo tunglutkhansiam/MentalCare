@@ -79,6 +79,62 @@ export class MemStorage implements IStorage {
   }
 
   private async initializeSampleData() {
+    // Create patient user accounts
+    const user1 = await this.createUser({
+      username: "johndoe",
+      password: "$2b$10$g4Xm8/PzX.J3w8xK6gD98OpE1xI9iBN9nMYZ1EkkK.BDVLXwo2zJm", // hashed "password123"
+      firstName: "John",
+      lastName: "Doe",
+      email: "john@example.com",
+      dateOfBirth: "1990-01-01"
+    });
+
+    const user2 = await this.createUser({
+      username: "janedoe",
+      password: "$2b$10$g4Xm8/PzX.J3w8xK6gD98OpE1xI9iBN9nMYZ1EkkK.BDVLXwo2zJm", // hashed "password123"
+      firstName: "Jane",
+      lastName: "Doe",
+      email: "jane@example.com",
+      dateOfBirth: "1992-05-15"
+    });
+    
+    // Create expert user accounts
+    const expertUser1 = await this.createUser({
+      username: "drjames",
+      password: "$2b$10$g4Xm8/PzX.J3w8xK6gD98OpE1xI9iBN9nMYZ1EkkK.BDVLXwo2zJm", // hashed "password123"
+      firstName: "James",
+      lastName: "Wilson",
+      email: "dr.james@example.com",
+      dateOfBirth: "1978-06-10"
+    });
+    
+    const expertUser2 = await this.createUser({
+      username: "drsarah",
+      password: "$2b$10$g4Xm8/PzX.J3w8xK6gD98OpE1xI9iBN9nMYZ1EkkK.BDVLXwo2zJm", // hashed "password123"
+      firstName: "Sarah",
+      lastName: "Johnson",
+      email: "dr.sarah@example.com",
+      dateOfBirth: "1985-03-20"
+    });
+    
+    const expertUser3 = await this.createUser({
+      username: "drrebecca",
+      password: "$2b$10$g4Xm8/PzX.J3w8xK6gD98OpE1xI9iBN9nMYZ1EkkK.BDVLXwo2zJm", // hashed "password123"
+      firstName: "Rebecca",
+      lastName: "Miller",
+      email: "dr.rebecca@example.com",
+      dateOfBirth: "1988-07-15"
+    });
+    
+    const expertUser4 = await this.createUser({
+      username: "drthomas",
+      password: "$2b$10$g4Xm8/PzX.J3w8xK6gD98OpE1xI9iBN9nMYZ1EkkK.BDVLXwo2zJm", // hashed "password123"
+      firstName: "Thomas",
+      lastName: "Nguyen",
+      email: "dr.thomas@example.com",
+      dateOfBirth: "1982-09-28"
+    });
+    
     // Create mental health categories
     await this.createCategory({
       name: "Depression",
@@ -106,6 +162,7 @@ export class MemStorage implements IStorage {
     
     // Create mental health experts
     const expert1 = await this.createExpert({
+      userId: expertUser1.id,
       name: "Dr. James Wilson",
       specialty: "Clinical Psychologist",
       about: "Dr. Wilson is a licensed clinical psychologist with over 15 years of experience. He specializes in cognitive behavioral therapy, depression, and anxiety disorders. Dr. Wilson is dedicated to providing compassionate care and helping patients develop effective coping strategies.",
@@ -118,6 +175,7 @@ export class MemStorage implements IStorage {
     });
     
     const expert2 = await this.createExpert({
+      userId: expertUser2.id,
       name: "Dr. Sarah Johnson",
       specialty: "Psychiatrist",
       about: "Dr. Johnson is a board-certified psychiatrist specializing in mood disorders and anxiety. With her extensive training and holistic approach, she provides personalized care combining medication management and psychotherapy techniques.",

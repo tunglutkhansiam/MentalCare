@@ -27,7 +27,7 @@ export default function HomePage() {
   });
   
   // Fetch upcoming appointments
-  const { data: upcomingAppointment, isLoading: loadingAppointment } = useQuery({
+  const { data: upcomingAppointment, isLoading: loadingAppointment } = useQuery<(Appointment & { expert: Expert }) | undefined>({
     queryKey: ["/api/appointments/upcoming"],
   });
 
@@ -40,6 +40,10 @@ export default function HomePage() {
 
   const handleViewAppointments = () => {
     navigate("/appointments");
+  };
+  
+  const handleViewExpertDashboard = () => {
+    navigate("/expert-dashboard");
   };
 
   return (
@@ -63,7 +67,7 @@ export default function HomePage() {
         </div>
 
         {/* Quick Action Cards */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className={`grid ${isExpert ? 'grid-cols-3' : 'grid-cols-2'} gap-4 mb-6`}>
           <Card 
             className="cursor-pointer hover:shadow-md transition-shadow" 
             onClick={handleFindExpert}
@@ -87,6 +91,20 @@ export default function HomePage() {
               <span className="font-medium">My Appointments</span>
             </CardContent>
           </Card>
+          
+          {isExpert && (
+            <Card 
+              className="cursor-pointer hover:shadow-md transition-shadow" 
+              onClick={handleViewExpertDashboard}
+            >
+              <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-2">
+                  <Briefcase className="h-6 w-6 text-purple-600" />
+                </div>
+                <span className="font-medium">Expert Dashboard</span>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Upcoming Appointment */}

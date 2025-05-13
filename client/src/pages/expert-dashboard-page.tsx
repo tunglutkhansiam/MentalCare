@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, FileText, MessageCircle, User as UserIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ExpertAppointmentCard } from "@/components/ui/expert-appointment-card";
+import { ExpertAppointmentCard } from "../components/ui/expert-appointment-card";
 import { useLocation } from "wouter";
 
 type ExpertAppointment = Appointment & { user: User };

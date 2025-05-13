@@ -53,14 +53,20 @@ export function setupWebSocket(httpServer: HttpServer) {
             return;
           }
 
-          // Broadcast the message to all connections for this chat
-          // Note: We don't create a message in the database here anymore
-          // because messages are created via the API endpoint
+          // Broadcast the message to all OTHER connections for this chat
+          // We don't send back to the original sender to avoid duplication
+          console.log(`Broadcasting message to connections with userId=${ws.userId} and expertId=${ws.expertId}`);
+          
+          let broadcastCount = 0;
           connections.forEach((client) => {
+            // Make sure we're only sending to other clients (not back to sender)
+            // and only to clients in the same chat conversation
             if (client !== ws && 
                 client.readyState === WebSocket.OPEN && 
-                client.userId === ws.userId && 
-                client.expertId === ws.expertId) {
+                ((client.userId === ws.userId && client.expertId === ws.expertId) ||
+                 (client.userId === ws.expertId && client.expertId === ws.userId))) {
+              
+              broadcastCount++;
               client.send(JSON.stringify({
                 type: 'message',
                 id: message.id,
@@ -72,6 +78,8 @@ export function setupWebSocket(httpServer: HttpServer) {
               }));
             }
           });
+          
+          console.log(`Message broadcast to ${broadcastCount} clients`);
         }
       } catch (err) {
         console.error('Error processing WebSocket message:', err);

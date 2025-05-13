@@ -48,9 +48,15 @@ export default function ChatPage() {
     onSuccess: (savedMessage) => {
       setMessage("");
       
-      // Invalidate the query to refresh the message list
-      queryClient.invalidateQueries({ 
-        queryKey: [isExpert ? `/api/expert-messages/${userId}` : `/api/messages/${expertId}`] 
+      // Add the message directly to our cache instead of invalidating the query
+      // This avoids duplicate fetches and UI updates
+      const queryKey = isExpert ? `/api/expert-messages/${userId}` : `/api/messages/${expertId}`;
+      queryClient.setQueryData([queryKey], (oldData: Message[] = []) => {
+        // Only add if not already present (check by id)
+        if (!oldData.some(msg => msg.id === savedMessage.id)) {
+          return [...oldData, savedMessage];
+        }
+        return oldData;
       });
       
       // Also send via WebSocket for real-time delivery to the other party
@@ -89,11 +95,24 @@ export default function ChatPage() {
     newSocket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        console.log("WebSocket message received:", data);
+        
         if (data.type === "message") {
-          // Invalidate the query to refresh messages
-          queryClient.invalidateQueries({ 
-            queryKey: [isExpert ? `/api/expert-messages/${userId}` : `/api/messages/${expertId}`] 
-          });
+          // Only update if we're receiving a message from someone else
+          // (not a message we just sent ourselves)
+          if (data.sender === (isExpert ? "user" : "expert")) {
+            console.log("Adding incoming message to message list");
+            
+            // Add directly to cache instead of triggering a re-fetch
+            const queryKey = isExpert ? `/api/expert-messages/${userId}` : `/api/messages/${expertId}`;
+            queryClient.setQueryData([queryKey], (oldData: Message[] = []) => {
+              // Only add if not already in the list (check by id)
+              if (!oldData.some(msg => msg.id === data.id)) {
+                return [...oldData, data as Message];
+              }
+              return oldData;
+            });
+          }
         }
       } catch (err) {
         console.error("Error parsing WebSocket message:", err);

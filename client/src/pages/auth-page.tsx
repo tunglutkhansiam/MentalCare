@@ -19,6 +19,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 
+// Import the SVG background image
+import mentalHealthBg from "../assets/mental-health-bg.svg";
+
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
@@ -90,9 +93,17 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-4 py-8 bg-background">
+    <div 
+      className="flex flex-col items-center justify-center min-h-screen px-4 py-8 bg-background"
+      style={{ 
+        backgroundImage: `url(${mentalHealthBg})`,
+        backgroundRepeat: 'no-repeat',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 bg-white/90 p-4 rounded-lg backdrop-blur-sm">
           <h1 className="text-3xl font-bold text-primary mb-2">MentalCare</h1>
           <p className="text-muted-foreground">Mental health consultation at your fingertips</p>
         </div>
@@ -104,7 +115,7 @@ export default function AuthPage() {
           </TabsList>
 
           <TabsContent value="login">
-            <Card>
+            <Card className="bg-white/95 backdrop-blur-sm shadow-lg">
               <CardContent className="pt-6">
                 <Form {...loginForm}>
                   <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">

@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -138,3 +138,52 @@ export type Message = typeof messages.$inferSelect;
 
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
 export type Category = typeof categories.$inferSelect;
+
+// Mental Health Questionnaires
+export const questionnaires = pgTable("questionnaires", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  questions: json("questions").notNull().$type<Array<{
+    id: number;
+    text: string;
+    options: Array<{
+      id: number;
+      text: string;
+      value: number;
+    }>;
+  }>>(),
+});
+
+export const insertQuestionnaireSchema = createInsertSchema(questionnaires).pick({
+  title: true,
+  description: true,
+  questions: true,
+});
+
+// User responses to questionnaires
+export const questionnaireResponses = pgTable("questionnaire_responses", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  questionnaireId: integer("questionnaire_id").notNull().references(() => questionnaires.id),
+  responses: json("responses").notNull().$type<Array<{
+    questionId: number;
+    answerId: number;
+    value: number;
+  }>>(),
+  score: integer("score"),
+  completedAt: timestamp("completed_at").defaultNow(),
+});
+
+export const insertQuestionnaireResponseSchema = createInsertSchema(questionnaireResponses).pick({
+  userId: true,
+  questionnaireId: true,
+  responses: true,
+  score: true,
+});
+
+export type InsertQuestionnaire = z.infer<typeof insertQuestionnaireSchema>;
+export type Questionnaire = typeof questionnaires.$inferSelect;
+
+export type InsertQuestionnaireResponse = z.infer<typeof insertQuestionnaireResponseSchema>;
+export type QuestionnaireResponse = typeof questionnaireResponses.$inferSelect;

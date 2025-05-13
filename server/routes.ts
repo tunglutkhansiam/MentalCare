@@ -126,11 +126,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
-      // Add the current user's ID to the appointment data
-      const appointmentData = insertAppointmentSchema.parse({
-        ...req.body,
-        userId: req.user.id
-      });
+      // Parse the incoming appointment data
+      const appointmentData = insertAppointmentSchema.parse(req.body);
+      
+      // Ensure the userId matches the authenticated user
+      if (appointmentData.userId !== req.user.id) {
+        return res.status(403).json({ message: "Cannot create appointments for other users" });
+      }
+      
       const appointment = await storage.createAppointment(appointmentData);
       res.status(201).json(appointment);
     } catch (err) {

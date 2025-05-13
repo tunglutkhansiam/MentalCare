@@ -9,10 +9,12 @@ import ExpertCard from "@/components/ui/expert-card";
 import CategoryCard from "@/components/ui/category-card";
 import AppointmentCard from "@/components/ui/appointment-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Briefcase } from "lucide-react";
 
 export default function HomePage() {
   const [, navigate] = useLocation();
-  const { user } = useAuth();
+  const { user, isExpert } = useAuth();
   
   // Fetch categories
   const { data: categories, isLoading: loadingCategories } = useQuery<Category[]>({

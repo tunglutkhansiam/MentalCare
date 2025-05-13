@@ -2,7 +2,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
 import { Appointment, User } from "@shared/schema";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistance } from "date-fns";
 import MobileLayout from "@/components/layouts/mobile-layout";
@@ -23,11 +23,12 @@ export default function ExpertDashboardPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
-  // Redirect if not an expert
-  if (!isExpert) {
-    setLocation("/");
-    return null;
-  }
+  // Effect to redirect if not an expert
+  useEffect(() => {
+    if (!isExpert) {
+      setLocation("/");
+    }
+  }, [isExpert, setLocation]);
 
   const {
     data: appointments,

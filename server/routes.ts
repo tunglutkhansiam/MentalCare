@@ -248,13 +248,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Chat messages
+  // Chat messages - for users to get messages with an expert
   app.get("/api/messages/:expertId", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     const expertId = parseInt(req.params.expertId);
     const messages = await storage.getMessagesByUserAndExpert(req.user.id, expertId);
     res.json(messages);
+  });
+  
+  // Chat messages - for experts to get messages with a specific user
+  app.get("/api/messages/:userId", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      // First check if the logged-in user is an expert
+      const expert = await storage.getExpertByUserId(req.user.id);
+      if (!expert) {
+        return res.status(403).json({ message: "Access denied: Not an expert" });
+      }
+      
+      const userId = parseInt(req.params.userId);
+      const messages = await storage.getMessagesByUserAndExpert(userId, expert.id);
+      res.json(messages);
+    } catch (err) {
+      console.error("Error fetching user-expert messages:", err);
+      res.status(500).json({ message: "Failed to fetch messages" });
+    }
   });
 
   app.post("/api/messages", async (req, res) => {

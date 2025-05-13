@@ -13,6 +13,7 @@ import AppointmentsPage from "@/pages/appointments-page";
 import ChatPage from "@/pages/chat-page";
 import ProfilePage from "@/pages/profile-page";
 import ExpertsListPage from "@/pages/experts-list-page";
+import QuestionnairePage from "@/pages/questionnaire-page";
 import NotFound from "@/pages/not-found";
 import { ProtectedRoute } from "./lib/protected-route";
 
@@ -28,6 +29,7 @@ function Router() {
       <ProtectedRoute path="/appointments" component={AppointmentsPage} />
       <ProtectedRoute path="/chat/:expertId" component={ChatPage} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
+      <ProtectedRoute path="/questionnaire/:id" component={QuestionnairePage} />
       <Route component={NotFound} />
     </Switch>
   );

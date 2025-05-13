@@ -8,9 +8,9 @@ import { Expert, Category, Appointment } from "@shared/schema";
 import ExpertCard from "@/components/ui/expert-card";
 import CategoryCard from "@/components/ui/category-card";
 import AppointmentCard from "@/components/ui/appointment-card";
+import { Briefcase, Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Briefcase } from "lucide-react";
 
 export default function HomePage() {
   const [, navigate] = useLocation();
@@ -32,10 +32,8 @@ export default function HomePage() {
   });
 
   const handleFindExpert = () => {
-    // Navigate to experts list or just show experts section
-    if (experts?.length) {
-      document.getElementById("experts-section")?.scrollIntoView({ behavior: "smooth" });
-    }
+    // Navigate to experts list page
+    navigate("/experts");
   };
 
   const handleViewAppointments = () => {
@@ -145,19 +143,24 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Top Health Experts */}
-        <div id="experts-section">
-          <h2 className="text-lg font-semibold mb-3">Top Health Experts</h2>
-          
-          <div className="space-y-4">
-            {loadingExperts ? (
-              Array(2).fill(0).map((_, i) => <ExpertCardSkeleton key={i} />)
-            ) : (
-              experts?.map(expert => (
-                <ExpertCard key={expert.id} expert={expert} />
-              ))
-            )}
-          </div>
+        {/* Find health experts card */}
+        <div className="mb-6">
+          <Card 
+            className="cursor-pointer hover:shadow-md transition-shadow"
+            onClick={handleFindExpert}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                  <Search className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium">Find Mental Health Experts</h3>
+                  <p className="text-sm text-muted-foreground">Browse certified therapists, counselors and psychologists</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </MobileLayout>

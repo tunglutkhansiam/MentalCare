@@ -31,8 +31,12 @@ export default function ExpertCard({ expert }: ExpertCardProps) {
           <div className="flex-1">
             <div>
               <h3 className="font-medium">{expert.name}</h3>
-              <p className="text-sm text-muted-foreground">{expert.specialty}</p>
-              <div className="flex items-center mt-1">
+              <div className="mt-1">
+                <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
+                  {expert.specialty}
+                </span>
+              </div>
+              <div className="flex items-center mt-1.5">
                 <div className="flex">
                   {Array(5).fill(0).map((_, i) => (
                     <span key={i} className="text-yellow-400 text-xs">⭐</span>

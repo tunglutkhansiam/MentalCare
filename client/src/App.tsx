@@ -12,6 +12,7 @@ import AppointmentBookingPage from "@/pages/appointment-booking-page";
 import AppointmentsPage from "@/pages/appointments-page";
 import ChatPage from "@/pages/chat-page";
 import ProfilePage from "@/pages/profile-page";
+import ExpertsListPage from "@/pages/experts-list-page";
 import NotFound from "@/pages/not-found";
 import { ProtectedRoute } from "./lib/protected-route";
 
@@ -22,6 +23,7 @@ function Router() {
       <ProtectedRoute path="/" component={HomePage} />
       <ProtectedRoute path="/expert/:expertId" component={ExpertProfilePage} />
       <ProtectedRoute path="/expert-dashboard" component={ExpertDashboardPage} />
+      <ProtectedRoute path="/experts" component={ExpertsListPage} />
       <ProtectedRoute path="/book-appointment/:expertId" component={AppointmentBookingPage} />
       <ProtectedRoute path="/appointments" component={AppointmentsPage} />
       <ProtectedRoute path="/chat/:expertId" component={ChatPage} />

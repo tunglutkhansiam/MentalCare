@@ -268,7 +268,7 @@ export default function ChatPage() {
           </div>
           <div>
             <h1 className="font-semibold">{chatExpert.name}</h1>
-            <p className="text-xs text-blue-100">{chatExpert.title} • Online</p>
+            <p className="text-xs text-blue-100">{chatExpert.specialty} • Online</p>
           </div>
         </>
       );

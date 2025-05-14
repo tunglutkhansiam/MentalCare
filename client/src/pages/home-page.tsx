@@ -230,62 +230,6 @@ export default function HomePage() {
                 </Card>
               )}
             </div>
-
-            {/* Recent Messages */}
-            <div className="mb-6">
-              <div className="flex justify-between items-center mb-3">
-                <h2 className="text-lg font-semibold">Recent Messages</h2>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => navigate("/expert-dashboard")}
-                >
-                  View all
-                </Button>
-              </div>
-              
-              {chatThreads && chatThreads.length > 0 ? (
-                <div className="space-y-3">
-                  {chatThreads.slice(0, 2).map(thread => (
-                    <Card key={thread.userId} className="overflow-hidden">
-                      <CardContent className="p-0">
-                        <button 
-                          className="w-full text-left p-4 hover:bg-muted/50 transition-colors"
-                          onClick={() => handleChatClick(thread.userId)}
-                        >
-                          <div className="flex items-center space-x-3">
-                            <Avatar className="h-10 w-10 border">
-                              <AvatarFallback>
-                                {getInitials(thread.user.firstName, thread.user.lastName)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex justify-between items-baseline">
-                                <p className="font-medium truncate">
-                                  {thread.user.firstName} {thread.user.lastName}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {thread.timestamp ? format(new Date(thread.timestamp), 'MMM d, h:mm a') : ''}
-                                </p>
-                              </div>
-                              <p className="text-sm text-muted-foreground truncate">
-                                {thread.content}
-                              </p>
-                            </div>
-                          </div>
-                        </button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <Card>
-                  <CardContent className="p-4 text-center py-8">
-                    <p className="text-muted-foreground">No messages yet</p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
           </>
         ) : (
           /* USER VIEW */

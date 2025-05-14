@@ -53,38 +53,62 @@ export function setupWebSocket(httpServer: HttpServer) {
             return;
           }
 
-          // Broadcast the message to all OTHER connections for this chat
-          // We don't send back to the original sender to avoid duplication
-          console.log(`Broadcasting message with id=${message.id} from ${message.sender} (userId=${ws.userId}, expertId=${ws.expertId})`);
+          // Keep track of recently broadcasted messages with a messageId to prevent duplicates
+          // We use a Set globally (outside this connection scope) to prevent multiple broadcasts
+          // of the same message across different connections
+          if (!global.recentlyBroadcastedMessages) {
+            global.recentlyBroadcastedMessages = new Set();
+          }
           
-          let broadcastCount = 0;
+          // Create a unique identifier for this message in this conversation
+          const messageKey = `${message.id}-${ws.userId}-${ws.expertId}`;
           
-          // Find other clients in the same conversation (user-expert pair)
-          // We need to handle both directions of the conversation
-          connections.forEach((client) => {
-            // Make sure we're only sending to other clients (not back to sender)
-            // and only to clients in the same chat conversation (matching both user-expert pair) 
-            if (client !== ws && 
-                client.readyState === WebSocket.OPEN && 
-                ((client.userId === ws.userId && client.expertId === ws.expertId) || 
-                 (client.userId === ws.expertId && client.expertId === ws.userId))) {
-              
-              broadcastCount++;
-              console.log(`Broadcasting to client with userId=${client.userId}, expertId=${client.expertId}`);
-              
-              client.send(JSON.stringify({
-                type: 'message',
-                id: message.id,
-                userId: ws.userId!,
-                expertId: ws.expertId!,
-                content: message.content,
-                sender: message.sender,
-                timestamp: message.timestamp || new Date()
-              }));
-            }
-          });
-          
-          console.log(`Message broadcast to ${broadcastCount} clients`);
+          // Only broadcast if we haven't recently sent this message
+          if (!global.recentlyBroadcastedMessages.has(messageKey)) {
+            console.log(`Broadcasting message with id=${message.id} from ${message.sender} (userId=${ws.userId}, expertId=${ws.expertId})`);
+            
+            // Add to the set of broadcasted messages to prevent duplicates
+            global.recentlyBroadcastedMessages.add(messageKey);
+            
+            // Set a timeout to remove this message from the tracking set after 5 seconds
+            // This allows for message deduplication without permanently growing the set
+            setTimeout(() => {
+              if (global.recentlyBroadcastedMessages) {
+                global.recentlyBroadcastedMessages.delete(messageKey);
+              }
+            }, 5000);
+            
+            let broadcastCount = 0;
+            
+            // Find other clients in the same conversation (user-expert pair)
+            // We need to handle both directions of the conversation
+            connections.forEach((client) => {
+              // Make sure we're only sending to other clients (not back to sender)
+              // and only to clients in the same chat conversation (matching both user-expert pair) 
+              if (client !== ws && 
+                  client.readyState === WebSocket.OPEN && 
+                  ((client.userId === ws.userId && client.expertId === ws.expertId) || 
+                   (client.userId === ws.expertId && client.expertId === ws.userId))) {
+                
+                broadcastCount++;
+                console.log(`Broadcasting to client with userId=${client.userId}, expertId=${client.expertId}`);
+                
+                client.send(JSON.stringify({
+                  type: 'message',
+                  id: message.id,
+                  userId: ws.userId!,
+                  expertId: ws.expertId!,
+                  content: message.content,
+                  sender: message.sender,
+                  timestamp: message.timestamp || new Date()
+                }));
+              }
+            });
+            
+            console.log(`Message broadcast to ${broadcastCount} clients`);
+          } else {
+            console.log(`Skipping duplicate broadcast of message with id=${message.id}`);
+          }
         }
       } catch (err) {
         console.error('Error processing WebSocket message:', err);

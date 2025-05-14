@@ -225,31 +225,37 @@ export default function ExpertDashboardPage() {
                 chatThreads.map((thread) => (
                   <Card key={thread.userId} className="overflow-hidden">
                     <CardContent className="p-0">
-                      <button 
-                        className="w-full text-left p-4 hover:bg-muted/50 transition-colors"
-                        onClick={() => thread.user && handleChatClick(thread.user.id)}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <Avatar className="h-10 w-10 border">
-                            <AvatarFallback>
-                              {getInitials(thread.user.firstName, thread.user.lastName)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex justify-between items-baseline">
-                              <p className="font-medium truncate">
-                                {thread.user.firstName} {thread.user.lastName}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {thread.timestamp ? format(new Date(thread.timestamp), 'MMM d, h:mm a') : ''}
+                      {thread.user ? (
+                        <button 
+                          className="w-full text-left p-4 hover:bg-muted/50 transition-colors"
+                          onClick={() => handleChatClick(thread.user.id)}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <Avatar className="h-10 w-10 border">
+                              <AvatarFallback>
+                                {getInitials(thread.user.firstName, thread.user.lastName)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex justify-between items-baseline">
+                                <p className="font-medium truncate">
+                                  {thread.user.firstName ? `${thread.user.firstName} ${thread.user.lastName || ''}` : thread.user.username}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {thread.timestamp ? format(new Date(thread.timestamp), 'MMM d, h:mm a') : ''}
+                                </p>
+                              </div>
+                              <p className="text-sm text-muted-foreground truncate">
+                                {thread.content}
                               </p>
                             </div>
-                            <p className="text-sm text-muted-foreground truncate">
-                              {thread.content}
-                            </p>
                           </div>
+                        </button>
+                      ) : (
+                        <div className="p-4 text-muted-foreground italic">
+                          <p>User data unavailable</p>
                         </div>
-                      </button>
+                      )}
                     </CardContent>
                   </Card>
                 ))

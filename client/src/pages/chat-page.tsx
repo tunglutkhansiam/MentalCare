@@ -274,10 +274,16 @@ export default function ChatPage() {
   
   if (!chatPartner) {
     return (
-      <div className="p-4 text-center">
-        <p>{isExpert ? "User" : "Expert"} not found</p>
-        <Button onClick={() => navigate("/")} className="mt-4">
-          Back to Home
+      <div className="flex flex-col items-center justify-center h-screen p-4 text-center bg-muted/20">
+        <h3 className="text-xl font-semibold mb-2">{isExpert ? "User" : "Expert"} not found</h3>
+        <p className="text-muted-foreground mb-6">
+          The {isExpert ? "user" : "expert"} profile could not be loaded or doesn't exist.
+        </p>
+        <Button 
+          onClick={() => isExpert ? navigate("/expert-dashboard") : navigate("/")} 
+          className="mt-4"
+        >
+          Back to {isExpert ? "Dashboard" : "Home"}
         </Button>
       </div>
     );

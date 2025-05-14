@@ -215,6 +215,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const userId = parseInt(req.params.userId);
+      
+      // Validate userId
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID format" });
+      }
+      
       const user = await storage.getUser(userId);
       
       if (!user) {

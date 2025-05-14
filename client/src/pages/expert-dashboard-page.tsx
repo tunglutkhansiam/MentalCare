@@ -157,9 +157,10 @@ export default function ExpertDashboardPage() {
           </Card>
 
           <Tabs defaultValue="upcoming" className="w-full" onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
               <TabsTrigger value="past">Past</TabsTrigger>
+              <TabsTrigger value="messages">Messages</TabsTrigger>
             </TabsList>
             <TabsContent value="upcoming" className="mt-4 space-y-4">
               {upcomingAppointments.length === 0 ? (
@@ -189,6 +190,11 @@ export default function ExpertDashboardPage() {
                   />
                 ))
               )}
+            </TabsContent>
+            <TabsContent value="messages" className="mt-4 space-y-4">
+              <div className="text-center p-6 bg-muted/50 rounded-lg">
+                <p className="text-muted-foreground">Messages feature coming soon</p>
+              </div>
             </TabsContent>
           </Tabs>
         </div>

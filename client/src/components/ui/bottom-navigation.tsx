@@ -56,11 +56,6 @@ export default function BottomNavigation() {
       icon: <Briefcase className="text-xl" />,
     },
     {
-      path: "/chat/1", // Will be redirected in the chat page component
-      label: "Messages",
-      icon: <MessageSquare className="text-xl" />,
-    },
-    {
       path: "/profile",
       label: "Profile",
       icon: <User className="text-xl" />,

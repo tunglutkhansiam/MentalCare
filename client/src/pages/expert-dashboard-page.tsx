@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
-import { Appointment, User, Message, Expert, Specialization } from "@shared/schema";
+import { Appointment, User, Expert, Specialization } from "@shared/schema";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistance, format } from "date-fns";
@@ -11,14 +11,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Calendar, Clock, FileText, MessageCircle, User as UserIcon, Briefcase, GraduationCap, Star } from "lucide-react";
+import { Calendar, Clock, FileText, User as UserIcon, Briefcase, GraduationCap, Star } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import ExpertAppointmentCard from "../components/ui/expert-appointment-card";
 import { useLocation } from "wouter";
 
 type ExpertAppointment = Appointment & { user: User };
-type ChatThread = Message & { user: User };
 type DetailedExpert = Expert & { specializations: Specialization[] };
 
 export default function ExpertDashboardPage() {
@@ -51,15 +50,6 @@ export default function ExpertDashboardPage() {
     queryKey: ["/api/expert/appointments"],
     queryFn: getQueryFn({ on401: "throw" }),
   });
-  
-  const {
-    data: chatThreads,
-    isLoading: loadingChats,
-    error: chatsError,
-  } = useQuery<ChatThread[], Error>({
-    queryKey: ["/api/expert/chats"],
-    queryFn: getQueryFn({ on401: "throw" }),
-  });
 
   // Show errors using an effect to avoid re-render issues
   useEffect(() => {
@@ -78,17 +68,9 @@ export default function ExpertDashboardPage() {
         description: appointmentsError.message,
       });
     }
-    
-    if (chatsError) {
-      toast({
-        variant: "destructive",
-        title: "Error loading messages",
-        description: chatsError.message,
-      });
-    }
-  }, [expertDetailsError, appointmentsError, chatsError, toast]);
+  }, [expertDetailsError, appointmentsError, toast]);
 
-  const isLoading = loadingAppointments || loadingExpertDetails || loadingChats;
+  const isLoading = loadingAppointments || loadingExpertDetails;
 
   if (isLoading) {
     return <ExpertDashboardSkeleton />;
@@ -108,12 +90,6 @@ export default function ExpertDashboardPage() {
     if (!firstName && !lastName) return "?";
     return `${firstName ? firstName.charAt(0) : ""}${lastName ? lastName.charAt(0) : ""}`.toUpperCase();
   }
-  
-  const handleChatClick = (userId: number) => {
-    if (expert) {
-      setLocation(`/chat/${userId}/${expert.id}`);
-    }
-  };
 
   return (
     <MobileLayout>

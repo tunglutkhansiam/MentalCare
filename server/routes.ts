@@ -269,6 +269,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const userId = parseInt(req.params.userId);
+      
+      // Validate userId is a valid number
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
       const messages = await storage.getMessagesByUserAndExpert(userId, expert.id);
       res.json(messages);
     } catch (err) {

@@ -226,7 +226,7 @@ export default function ExpertDashboardPage() {
                     <CardContent className="p-0">
                       <button 
                         className="w-full text-left p-4 hover:bg-muted/50 transition-colors"
-                        onClick={() => handleChatClick(thread.userId)}
+                        onClick={() => handleChatClick(thread.user.id)}
                       >
                         <div className="flex items-center space-x-3">
                           <Avatar className="h-10 w-10 border">

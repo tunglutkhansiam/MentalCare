@@ -52,16 +52,7 @@ export default function ExpertDashboardPage() {
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
-  const {
-    data: chatThreads,
-    isLoading: loadingChats,
-    error: chatsError,
-  } = useQuery<ChatThread[], Error>({
-    queryKey: ["/api/expert/chats"],
-    queryFn: getQueryFn({ on401: "throw" }),
-  });
-
-  const isLoading = loadingAppointments || loadingChats || loadingExpertDetails;
+  const isLoading = loadingAppointments || loadingExpertDetails;
 
   if (isLoading) {
     return <ExpertDashboardSkeleton />;
@@ -83,13 +74,7 @@ export default function ExpertDashboardPage() {
     });
   }
 
-  if (chatsError) {
-    toast({
-      variant: "destructive",
-      title: "Error loading chat threads",
-      description: chatsError.message,
-    });
-  }
+
 
   const upcomingAppointments = appointments?.filter(appointment => 
     appointment.status === "upcoming"
@@ -127,9 +112,7 @@ export default function ExpertDashboardPage() {
                 <Badge variant="outline" className="text-sm">
                   {pastAppointments.length} Past
                 </Badge>
-                <Badge variant="outline" className="text-sm">
-                  {chatThreads?.length || 0} Messages
-                </Badge>
+
                 {detailedExpert?.rating && (
                   <Badge className="bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100 flex items-center gap-1">
                     <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
@@ -177,10 +160,9 @@ export default function ExpertDashboardPage() {
           </Card>
 
           <Tabs defaultValue="upcoming" className="w-full" onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
               <TabsTrigger value="past">Past</TabsTrigger>
-              <TabsTrigger value="messages">Messages</TabsTrigger>
             </TabsList>
             <TabsContent value="upcoming" className="mt-4 space-y-4">
               {upcomingAppointments.length === 0 ? (

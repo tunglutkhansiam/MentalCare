@@ -9,6 +9,11 @@ interface WebSocketConnection extends WebSocket {
   expertId?: number;
 }
 
+// Extend global for our message tracking
+declare global {
+  var recentlyBroadcastedMessages: Set<string>;
+}
+
 export function setupWebSocket(httpServer: HttpServer) {
   // Create WebSocket server
   const wss = new WebSocketServer({ 

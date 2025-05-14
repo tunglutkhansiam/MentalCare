@@ -1,11 +1,9 @@
 import { Appointment, User } from "@shared/schema";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, Clock, FileText, MessageCircle, User as UserIcon } from "lucide-react";
+import { Calendar, Clock, FileText, User as UserIcon } from "lucide-react";
 import { format } from "date-fns";
-import { useLocation } from "wouter";
 
 interface ExpertAppointmentCardProps {
   appointment: Appointment & { user: User };
@@ -16,8 +14,6 @@ export default function ExpertAppointmentCard({
   appointment, 
   isPast = false 
 }: ExpertAppointmentCardProps) {
-  const [, setLocation] = useLocation();
-
   // Format appointment date and time
   const appointmentDate = new Date(`${appointment.date}T${appointment.time}`);
   const dateFormatted = format(appointmentDate, "MMMM d, yyyy");
@@ -34,10 +30,6 @@ export default function ExpertAppointmentCard({
       default:
         return "bg-gray-100 text-gray-800";
     }
-  }
-
-  function handleChatClick() {
-    setLocation(`/chat/${appointment.user.id}`);
   }
 
   return (
@@ -58,7 +50,7 @@ export default function ExpertAppointmentCard({
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="pb-2">
+      <CardContent>
         <div className="space-y-2">
           <div className="flex items-center space-x-2 text-sm">
             <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -76,19 +68,6 @@ export default function ExpertAppointmentCard({
           )}
         </div>
       </CardContent>
-      {!isPast && (
-        <CardFooter className="pt-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full"
-            onClick={handleChatClick}
-          >
-            <MessageCircle className="h-4 w-4 mr-2" />
-            Chat with Patient
-          </Button>
-        </CardFooter>
-      )}
     </Card>
   );
 }

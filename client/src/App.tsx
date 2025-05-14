@@ -11,6 +11,7 @@ import ExpertDashboardPage from "@/pages/expert-dashboard-page";
 import AppointmentBookingPage from "@/pages/appointment-booking-page";
 import AppointmentsPage from "@/pages/appointments-page";
 import ChatPage from "@/pages/chat-page";
+import ExpertChatPage from "@/pages/expert-chat-page";
 import ProfilePage from "@/pages/profile-page";
 import ExpertsListPage from "@/pages/experts-list-page";
 import QuestionnairePage from "@/pages/questionnaire-page";
@@ -29,6 +30,7 @@ function Router() {
       <ProtectedRoute path="/appointments" component={AppointmentsPage} />
       <ProtectedRoute path="/chat/:userId/:expertId" component={ChatPage} />
       <ProtectedRoute path="/chat/:expertId" component={ChatPage} />
+      <ProtectedRoute path="/expert-chat/:userId" component={ExpertChatPage} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/questionnaire/:id" component={QuestionnairePage} />
       <Route component={NotFound} />

@@ -15,6 +15,7 @@ import { Calendar, Clock, FileText, User as UserIcon, Briefcase, GraduationCap, 
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import ExpertAppointmentCard from "../components/ui/expert-appointment-card";
+import ExpertMessagesTab from "../components/ui/expert-messages-tab";
 import { useLocation } from "wouter";
 
 type ExpertAppointment = Appointment & { user: User };

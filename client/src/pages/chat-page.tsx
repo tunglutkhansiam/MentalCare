@@ -20,6 +20,17 @@ export default function ChatPage() {
   const [messageText, setMessageText] = useState("");
   const [socket, setSocket] = useState<WebSocket | null>(null);
   
+  // Redirect experts away from the chat page
+  useEffect(() => {
+    if (isExpert) {
+      navigate("/expert-dashboard");
+      toast({
+        title: "Chat access restricted",
+        description: "Chat functionality is not available for experts.",
+      });
+    }
+  }, [isExpert, navigate, toast]);
+  
   // Use refs to track message state to avoid duplication issues
   const messagesRef = useRef<Message[]>([]);
   const seenMessageIds = useRef<Set<number>>(new Set());
@@ -32,24 +43,24 @@ export default function ChatPage() {
     enabled: !isExpert && !!expertId,
   });
 
-  // Fetch user details if logged in user is an expert
+  // We don't need to fetch user details for experts anymore since they're redirected away
   const { data: chatUser, isLoading: loadingUser } = useQuery<User>({
     queryKey: [`/api/user/${userId}`],
     queryFn: getQueryFn({ on401: "throw" }),
-    enabled: isExpert && !!userId,
+    enabled: false, // Disabled since experts are redirected away
   });
   
   // Load initial messages from server
   useEffect(() => {
-    if (!user?.id || !expertId) return;
+    // Exit early if user is expert (they'll be redirected) or if required IDs aren't available
+    if (!user?.id || !expertId || isExpert) return;
     
     const fetchMessages = async () => {
       try {
         setIsLoading(true);
         
-        const apiEndpoint = isExpert 
-          ? `/api/expert-messages/${userId}` 
-          : `/api/messages/${expertId}`;
+        // Only fetch messages for regular users (not experts)
+        const apiEndpoint = `/api/messages/${expertId}`;
           
         const response = await fetch(apiEndpoint);
         
@@ -150,15 +161,16 @@ export default function ChatPage() {
   
   // Setup WebSocket connection
   useEffect(() => {
-    if (!user?.id || !expertId) return;
+    // Don't setup WebSocket for experts (they'll be redirected) or if required IDs aren't available
+    if (!user?.id || !expertId || isExpert) return;
     
     // Close any existing connection
     if (socket) {
       socket.close();
     }
     
-    // Create WebSocket connection
-    const chatUserId = isExpert ? userId : user.id.toString();
+    // Create WebSocket connection - only for regular users (not experts)
+    const chatUserId = user.id.toString();
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${window.location.host}/ws?userId=${chatUserId}&expertId=${expertId}`;
     

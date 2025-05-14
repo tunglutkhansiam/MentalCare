@@ -104,8 +104,9 @@ export default function ExpertDashboardPage() {
     appointment.status === "completed" || appointment.status === "cancelled"
   ) || [];
 
-  function getInitials(firstName: string, lastName: string) {
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  function getInitials(firstName?: string, lastName?: string) {
+    if (!firstName && !lastName) return "?";
+    return `${firstName ? firstName.charAt(0) : ""}${lastName ? lastName.charAt(0) : ""}`.toUpperCase();
   }
   
   const handleChatClick = (userId: number) => {
@@ -226,7 +227,7 @@ export default function ExpertDashboardPage() {
                     <CardContent className="p-0">
                       <button 
                         className="w-full text-left p-4 hover:bg-muted/50 transition-colors"
-                        onClick={() => handleChatClick(thread.user.id)}
+                        onClick={() => thread.user && handleChatClick(thread.user.id)}
                       >
                         <div className="flex items-center space-x-3">
                           <Avatar className="h-10 w-10 border">

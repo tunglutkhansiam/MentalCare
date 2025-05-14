@@ -192,9 +192,9 @@ export default function ExpertDashboardPage() {
               )}
             </TabsContent>
             <TabsContent value="messages" className="mt-4 space-y-4">
-              <div className="text-center p-6 bg-muted/50 rounded-lg">
-                <p className="text-muted-foreground">Messages feature coming soon</p>
-              </div>
+              {activeTab === "messages" && (
+                <ExpertMessagesTab />
+              )}
             </TabsContent>
           </Tabs>
         </div>

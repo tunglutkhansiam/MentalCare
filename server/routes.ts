@@ -254,6 +254,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get all message conversations for an expert
+  app.get("/api/expert/messages", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      // First check if user is an expert
+      const expert = await storage.getExpertByUserId(req.user.id);
+      if (!expert) {
+        return res.status(403).json({ message: "Access denied: Not an expert" });
+      }
+      
+      // In a real application, this would be a more optimized query to get unique users
+      // with their latest message for this expert
+      const allMessages = await storage.getMessagesByExpert(expert.id);
+      
+      // Group messages by user and get the most recent ones
+      const userMap = new Map();
+      
+      for (const message of allMessages) {
+        const messageDate = message.timestamp ? new Date(message.timestamp) : new Date();
+        const existingMessage = userMap.get(message.userId);
+        const existingDate = existingMessage && existingMessage.timestamp ? 
+          new Date(existingMessage.timestamp) : new Date(0);
+        
+        if (!userMap.has(message.userId) || messageDate > existingDate) {
+          userMap.set(message.userId, message);
+        }
+      }
+      
+      // Convert map to array of latest messages
+      const recentMessages = Array.from(userMap.values());
+      
+      // Sort by most recent timestamp
+      recentMessages.sort((a, b) => {
+        const dateA = a.timestamp ? new Date(a.timestamp) : new Date(0);
+        const dateB = b.timestamp ? new Date(b.timestamp) : new Date(0);
+        return dateB.getTime() - dateA.getTime();
+      });
+      
+      res.json(recentMessages);
+    } catch (err) {
+      console.error("Error fetching expert messages:", err);
+      res.status(500).json({ message: "Failed to fetch messages" });
+    }
+  });
+  
   // Chat messages - for users to get messages with an expert
   app.get("/api/messages/:expertId", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

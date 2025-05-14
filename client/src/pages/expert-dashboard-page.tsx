@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
-import { Appointment, User, Expert, Specialization } from "@shared/schema";
+import { Appointment, User, Message, Expert, Specialization } from "@shared/schema";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistance, format } from "date-fns";
@@ -11,13 +11,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Calendar, Clock, FileText, User as UserIcon, Briefcase, GraduationCap, Star } from "lucide-react";
+import { Calendar, Clock, FileText, MessageCircle, User as UserIcon, Briefcase, GraduationCap, Star } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import ExpertAppointmentCard from "../components/ui/expert-appointment-card";
 import { useLocation } from "wouter";
 
 type ExpertAppointment = Appointment & { user: User };
+type ChatThread = Message & { user: User };
 type DetailedExpert = Expert & { specializations: Specialization[] };
 
 export default function ExpertDashboardPage() {
@@ -50,6 +51,15 @@ export default function ExpertDashboardPage() {
     queryKey: ["/api/expert/appointments"],
     queryFn: getQueryFn({ on401: "throw" }),
   });
+  
+  const {
+    data: chatThreads,
+    isLoading: loadingChats,
+    error: chatsError,
+  } = useQuery<ChatThread[], Error>({
+    queryKey: ["/api/expert/chats"],
+    queryFn: getQueryFn({ on401: "throw" }),
+  });
 
   // Show errors using an effect to avoid re-render issues
   useEffect(() => {
@@ -68,9 +78,17 @@ export default function ExpertDashboardPage() {
         description: appointmentsError.message,
       });
     }
-  }, [expertDetailsError, appointmentsError, toast]);
+    
+    if (chatsError) {
+      toast({
+        variant: "destructive",
+        title: "Error loading messages",
+        description: chatsError.message,
+      });
+    }
+  }, [expertDetailsError, appointmentsError, chatsError, toast]);
 
-  const isLoading = loadingAppointments || loadingExpertDetails;
+  const isLoading = loadingAppointments || loadingExpertDetails || loadingChats;
 
   if (isLoading) {
     return <ExpertDashboardSkeleton />;
@@ -89,6 +107,12 @@ export default function ExpertDashboardPage() {
   function getInitials(firstName: string, lastName: string) {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   }
+  
+  const handleChatClick = (userId: number) => {
+    if (expert) {
+      setLocation(`/chat/${userId}/${expert.id}`);
+    }
+  };
 
   return (
     <MobileLayout>
@@ -156,9 +180,10 @@ export default function ExpertDashboardPage() {
           </Card>
 
           <Tabs defaultValue="upcoming" className="w-full" onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
               <TabsTrigger value="past">Past</TabsTrigger>
+              <TabsTrigger value="messages">Messages</TabsTrigger>
             </TabsList>
             <TabsContent value="upcoming" className="mt-4 space-y-4">
               {upcomingAppointments.length === 0 ? (
@@ -186,6 +211,46 @@ export default function ExpertDashboardPage() {
                     appointment={appointment} 
                     isPast={true}
                   />
+                ))
+              )}
+            </TabsContent>
+            
+            <TabsContent value="messages" className="mt-4 space-y-4">
+              {!chatThreads || chatThreads.length === 0 ? (
+                <div className="text-center p-6 bg-muted/50 rounded-lg">
+                  <p className="text-muted-foreground">No message threads</p>
+                </div>
+              ) : (
+                chatThreads.map((thread) => (
+                  <Card key={thread.userId} className="overflow-hidden">
+                    <CardContent className="p-0">
+                      <button 
+                        className="w-full text-left p-4 hover:bg-muted/50 transition-colors"
+                        onClick={() => handleChatClick(thread.userId)}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <Avatar className="h-10 w-10 border">
+                            <AvatarFallback>
+                              {getInitials(thread.user.firstName, thread.user.lastName)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-baseline">
+                              <p className="font-medium truncate">
+                                {thread.user.firstName} {thread.user.lastName}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {thread.timestamp ? format(new Date(thread.timestamp), 'MMM d, h:mm a') : ''}
+                              </p>
+                            </div>
+                            <p className="text-sm text-muted-foreground truncate">
+                              {thread.content}
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    </CardContent>
+                  </Card>
                 ))
               )}
             </TabsContent>
@@ -248,7 +313,8 @@ function ExpertDashboardSkeleton() {
           </Card>
           
           {/* Tabs skeleton */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
+            <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
           </div>

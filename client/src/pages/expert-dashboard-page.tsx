@@ -51,12 +51,6 @@ export default function ExpertDashboardPage() {
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
-  const isLoading = loadingAppointments || loadingExpertDetails;
-
-  if (isLoading) {
-    return <ExpertDashboardSkeleton />;
-  }
-
   // Show errors using an effect to avoid re-render issues
   useEffect(() => {
     if (expertDetailsError) {
@@ -75,6 +69,12 @@ export default function ExpertDashboardPage() {
       });
     }
   }, [expertDetailsError, appointmentsError, toast]);
+
+  const isLoading = loadingAppointments || loadingExpertDetails;
+
+  if (isLoading) {
+    return <ExpertDashboardSkeleton />;
+  }
 
 
 

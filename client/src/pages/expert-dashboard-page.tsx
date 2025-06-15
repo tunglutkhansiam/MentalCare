@@ -96,11 +96,11 @@ export default function ExpertDashboardPage() {
     <MobileLayout>
       <div className="container pt-6 pb-20">
         <div className="flex flex-col space-y-4">
-          <h1 className="text-2xl font-bold">Expert Dashboard</h1>
-          <Card className="overflow-hidden">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Expert Dashboard</h1>
+          <Card className="overflow-hidden border-0 shadow-modern-lg bg-gradient-to-br from-white to-blue-50">
             <CardHeader className="pb-2">
-              <CardTitle className="text-xl font-bold">{detailedExpert?.name}</CardTitle>
-              <CardDescription className="text-md font-medium text-primary">{detailedExpert?.specialty}</CardDescription>
+              <CardTitle className="text-2xl font-bold text-gray-800">{detailedExpert?.name}</CardTitle>
+              <CardDescription className="text-lg font-semibold text-blue-600">{detailedExpert?.specialty}</CardDescription>
             </CardHeader>
             <CardContent className="pb-0">
               <div className="flex flex-wrap items-center gap-2 mb-4">

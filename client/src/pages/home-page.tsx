@@ -92,52 +92,52 @@ export default function HomePage() {
 
   return (
     <MobileLayout>
-      <div className="px-4 py-6">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-2xl font-semibold text-foreground">
-              Hi, {isExpert ? expert?.name : user?.firstName || "User"}!
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              {isExpert ? `Welcome to your dashboard` : "How are you feeling today?"}
-            </p>
+      <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen">
+        <div className="px-4 py-6">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Hi, {isExpert ? expert?.name : user?.firstName || "User"}!
+              </h1>
+              <p className="text-gray-600 text-sm mt-1">
+                {isExpert ? `Welcome to your dashboard` : "How are you feeling today?"}
+              </p>
+            </div>
+            <div 
+              className="h-12 w-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg cursor-pointer transform hover:scale-105 transition-transform duration-200"
+              onClick={() => navigate("/profile")}
+            >
+              <span className="text-white font-bold text-sm">
+                {isExpert ? getInitials(...(expert?.name.split(" ") || [])) : getInitials(user?.firstName, user?.lastName)}
+              </span>
+            </div>
           </div>
-          <div 
-            className="h-10 w-10 bg-muted rounded-full flex items-center justify-center"
-            onClick={() => navigate("/profile")}
-          >
-            <span className="text-muted-foreground font-medium">
-              {isExpert ? getInitials(...(expert?.name.split(" ") || [])) : getInitials(user?.firstName, user?.lastName)}
-            </span>
-          </div>
-        </div>
 
         {isExpert ? (
           /* EXPERT VIEW */
           <>
             {/* Expert Profile */}
-            <Card className="mb-6">
+            <Card className="mb-6 border-0 shadow-xl bg-gradient-to-br from-white to-blue-50">
               <CardHeader className="pb-2">
-                <CardTitle>{expert?.name}</CardTitle>
-                <CardDescription>{expert?.specialty}</CardDescription>
+                <CardTitle className="text-xl font-bold text-gray-800">{expert?.name}</CardTitle>
+                <CardDescription className="text-blue-600 font-medium">{expert?.specialty}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center space-x-2">
-                  <Badge variant="outline" className="text-sm">
+                  <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-md">
                     {upcomingExpertAppointments.length} Upcoming
                   </Badge>
-                  <Badge variant="outline" className="text-sm">
+                  <Badge className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-md">
                     {pastExpertAppointments.length} Past
                   </Badge>
-                  <Badge variant="outline" className="text-sm">
+                  <Badge className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0 shadow-md">
                     {chatThreads?.length || 0} Messages
                   </Badge>
                 </div>
               </CardContent>
               <CardFooter className="pt-0 pb-2">
                 <Button 
-                  variant="default" 
-                  className="w-full"
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg transition-all duration-300 transform hover:scale-105"
                   onClick={handleViewExpertDashboard}
                 >
                   View Expert Dashboard
@@ -304,6 +304,7 @@ export default function HomePage() {
             )}
           </>
         )}
+        </div>
       </div>
     </MobileLayout>
   );

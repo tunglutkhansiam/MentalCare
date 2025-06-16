@@ -1,6 +1,6 @@
 import { User, InsertUser, Expert, InsertExpert, Specialization, InsertSpecialization, Appointment, InsertAppointment, Message, InsertMessage, Category, InsertCategory } from "@shared/schema";
 import { db } from "./db";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { users, experts, specializations, appointments, messages, categories } from "@shared/schema";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
@@ -294,6 +294,9 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getAppointmentsByExpert(expertId: number): Promise<(Appointment & { user: User })[]> {
+    // First update appointment statuses based on current date
+    await this.updateAppointmentStatusesByDate();
+    
     // First get appointments for this specific expert
     const expertAppointments = await db.select().from(appointments).where(eq(appointments.expertId, expertId));
     
@@ -369,6 +372,28 @@ export class DatabaseStorage implements IStorage {
     }
     
     return updatedAppointment;
+  }
+
+  async updateAppointmentStatusesByDate(): Promise<void> {
+    const now = new Date();
+    const currentDate = now.toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
+    
+    // Get all upcoming appointments
+    const upcomingAppointments = await db
+      .select()
+      .from(appointments)
+      .where(eq(appointments.status, "upcoming"));
+    
+    // Update appointments that are past the current date to "completed"
+    for (const appointment of upcomingAppointments) {
+      const appointmentDate = new Date(`${appointment.date} ${appointment.time}`);
+      if (appointmentDate < now) {
+        await db
+          .update(appointments)
+          .set({ status: "completed" })
+          .where(eq(appointments.id, appointment.id));
+      }
+    }
   }
   
   async getMessagesByUserAndExpert(userId: number, expertId: number): Promise<Message[]> {

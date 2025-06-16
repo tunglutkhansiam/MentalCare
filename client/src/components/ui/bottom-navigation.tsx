@@ -56,8 +56,8 @@ export default function BottomNavigation() {
       icon: <Briefcase className="text-xl" />,
     },
     {
-      path: "/profile",
-      label: "Profile",
+      path: "/expert-settings",
+      label: "Settings",
       icon: <User className="text-xl" />,
     },
   ];

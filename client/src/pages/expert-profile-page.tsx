@@ -180,11 +180,11 @@ export default function ExpertProfilePage() {
           </CardContent>
         </Card>
         
-        <div className="space-y-3">
-          <Button onClick={handleBookAppointment} className="mobile-button w-full tap-highlight-none">
+        <div className="flex flex-col items-center space-y-3">
+          <Button onClick={handleBookAppointment} size="sm" className="tap-highlight-none px-6 py-2 h-9 text-sm">
             Book Free Consultation
           </Button>
-          <Button onClick={handleMessage} variant="outline" className="mobile-button w-full border-primary text-primary tap-highlight-none">
+          <Button onClick={handleMessage} variant="outline" size="sm" className="border-primary text-primary tap-highlight-none px-6 py-2 h-9 text-sm">
             Send Message
           </Button>
         </div>

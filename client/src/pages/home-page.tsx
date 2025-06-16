@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Expert, Category, Appointment, Questionnaire, Message, User } from "@shared/schema";
 import AppointmentCard from "@/components/ui/appointment-card";
 import QuestionnaireCard, { QuestionnaireCardSkeleton } from "@/components/ui/questionnaire-card";
-import { Briefcase, Calendar, ClipboardList, MessageCircle, User as UserIcon, Users } from "lucide-react";
+import { Briefcase, Calendar, ClipboardList, MessageCircle, User as UserIcon, Users, LogOut } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -20,7 +20,7 @@ type ChatThread = Message & { user: User };
 
 export default function HomePage() {
   const [, navigate] = useLocation();
-  const { user, expert, isExpert } = useAuth();
+  const { user, expert, isExpert, logoutMutation } = useAuth();
   
   // Fetch user-related data
   const { data: questionnaires, isLoading: loadingQuestionnaires } = useQuery<Pick<Questionnaire, "id" | "title" | "description">[]>({
@@ -103,13 +103,25 @@ export default function HomePage() {
                 {isExpert ? `Welcome to your dashboard` : "How are you feeling today?"}
               </p>
             </div>
-            <div 
-              className="h-12 w-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg cursor-pointer transform hover:scale-105 transition-transform duration-200"
-              onClick={() => navigate("/profile")}
-            >
-              <span className="text-white font-bold text-sm">
-                {isExpert ? getInitials(...(expert?.name.split(" ") || [])) : getInitials(user?.firstName, user?.lastName)}
-              </span>
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => logoutMutation.mutateAsync()}
+                disabled={logoutMutation.isPending}
+                className="flex items-center gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </Button>
+              <div 
+                className="h-12 w-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg cursor-pointer transform hover:scale-105 transition-transform duration-200"
+                onClick={() => navigate("/profile")}
+              >
+                <span className="text-white font-bold text-sm">
+                  {isExpert ? getInitials(...(expert?.name.split(" ") || [])) : getInitials(user?.firstName, user?.lastName)}
+                </span>
+              </div>
             </div>
           </div>
 

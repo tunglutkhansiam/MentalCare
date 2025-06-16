@@ -29,19 +29,19 @@ export default function ExpertsListPage() {
 
   return (
     <MobileLayout>
-      <div className="p-4">
-        <button onClick={handleBackClick} className="mb-4 flex items-center text-sm">
+      <div className="mobile-padding mobile-spacing">
+        <button onClick={handleBackClick} className="mb-4 flex items-center text-sm touch-target tap-highlight-none">
           <ArrowLeft className="mr-1 h-4 w-4" /> Back to Home
         </button>
         
         <h1 className="text-2xl font-bold mb-2">Mental Health Experts</h1>
-        <p className="text-muted-foreground mb-4">Connect with certified mental health professionals for free consultation</p>
+        <p className="text-muted-foreground mb-4 mobile-text">Connect with certified mental health professionals for free consultation</p>
         
         <div className="mb-6">
           <Input
             type="text"
             placeholder="Search by name or specialty..."
-            className="w-full"
+            className="mobile-input w-full tap-highlight-none"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />

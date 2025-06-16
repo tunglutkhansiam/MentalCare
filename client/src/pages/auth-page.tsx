@@ -96,7 +96,7 @@ export default function AuthPage() {
 
   return (
     <div 
-      className="flex flex-col items-center justify-center min-h-screen px-4 py-8 bg-background"
+      className="flex flex-col items-center justify-center min-h-screen mobile-padding bg-background"
       style={{ 
         backgroundImage: `url(${mentalHealthBg})`,
         backgroundRepeat: 'no-repeat',
@@ -104,7 +104,7 @@ export default function AuthPage() {
         backgroundPosition: 'center',
       }}
     >
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md mobile-spacing">
         <div className="text-center mb-8 bg-amber-50/95 p-6 rounded-lg backdrop-blur-sm shadow-lg border-amber-100">
           <h1 className="text-4xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600">MentalCare</h1>
           <p className="text-muted-foreground text-lg">Mental health consultation at your fingertips</p>
@@ -183,7 +183,7 @@ export default function AuthPage() {
 
                     <Button 
                       type="submit"
-                      className="w-full bg-primary hover:bg-primary/90 text-white" 
+                      className="mobile-button w-full bg-primary hover:bg-primary/90 text-white tap-highlight-none" 
                       disabled={loginMutation.isPending}
                     >
                       {loginMutation.isPending ? "Logging in..." : "Log in"}

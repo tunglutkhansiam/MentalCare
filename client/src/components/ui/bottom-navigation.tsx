@@ -77,7 +77,7 @@ export default function BottomNavigation() {
           key={item.path}
           onClick={() => handleNavClick(item.path)}
           className={cn(
-            "flex flex-col items-center justify-center w-full h-full rounded-lg transition-all duration-300 transform",
+            "flex flex-col items-center justify-center w-full h-full rounded-lg transition-all duration-300 transform touch-target tap-highlight-none",
             activeTab === item.path || 
             (item.path === "/chat/1" && activeTab.startsWith("/chat/"))
               ? "text-blue-600 bg-blue-50 scale-105 shadow-sm"

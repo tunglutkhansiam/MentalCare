@@ -20,8 +20,8 @@ export default function ExpertCard({ expert }: ExpertCardProps) {
   };
 
   return (
-    <Card>
-      <CardContent className="p-4">
+    <Card className="tap-highlight-none">
+      <CardContent className="mobile-card">
         <div className="flex">
           <div className="w-16 h-16 bg-gray-200 rounded-full mr-3 flex-shrink-0 flex items-center justify-center">
             <span className="font-medium text-gray-600">
@@ -30,7 +30,7 @@ export default function ExpertCard({ expert }: ExpertCardProps) {
           </div>
           <div className="flex-1">
             <div>
-              <h3 className="font-medium">{expert.name}</h3>
+              <h3 className="font-medium mobile-text">{expert.name}</h3>
               <div className="mt-1">
                 <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
                   {expert.specialty}
@@ -49,7 +49,7 @@ export default function ExpertCard({ expert }: ExpertCardProps) {
             </div>
             <div className="flex mt-3 space-x-2">
               <Button 
-                className="flex-1 text-sm py-2 h-auto" 
+                className="mobile-button flex-1 tap-highlight-none" 
                 onClick={handleBookAppointment}
               >
                 Book Appointment
@@ -57,7 +57,7 @@ export default function ExpertCard({ expert }: ExpertCardProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-10 w-10 rounded-lg"
+                className="touch-target rounded-lg tap-highlight-none"
                 onClick={handleMessage}
               >
                 <MessageSquare className="h-5 w-5" />

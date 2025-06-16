@@ -15,6 +15,50 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
+// Indian holidays for 2025-2026 (major national holidays)
+const indianHolidays = [
+  // 2025 holidays
+  "2025-01-26", // Republic Day
+  "2025-03-13", // Holi
+  "2025-03-14", // Dhuleti (Holi second day)
+  "2025-04-13", // Ram Navami
+  "2025-04-18", // Good Friday
+  "2025-05-12", // Buddha Purnima
+  "2025-08-15", // Independence Day
+  "2025-08-16", // Janmashtami
+  "2025-09-07", // Ganesh Chaturthi
+  "2025-10-02", // Gandhi Jayanti
+  "2025-10-20", // Dussehra
+  "2025-11-01", // Diwali
+  "2025-11-02", // Govardhan Puja
+  "2025-11-03", // Bhai Dooj
+  "2025-12-25", // Christmas
+  // 2026 holidays
+  "2026-01-26", // Republic Day
+  "2026-03-03", // Holi
+  "2026-04-02", // Ram Navami
+  "2026-04-03", // Good Friday
+  "2026-05-01", // Buddha Purnima
+  "2026-08-15", // Independence Day
+  "2026-08-05", // Janmashtami
+  "2026-08-27", // Ganesh Chaturthi
+  "2026-10-02", // Gandhi Jayanti
+  "2026-10-08", // Dussehra
+  "2026-10-19", // Diwali
+  "2026-12-25", // Christmas
+];
+
+// Function to check if a date is a Sunday
+const isSunday = (date: Date): boolean => {
+  return date.getDay() === 0;
+};
+
+// Function to check if a date is an Indian holiday
+const isIndianHoliday = (date: Date): boolean => {
+  const dateString = format(date, 'yyyy-MM-dd');
+  return indianHolidays.includes(dateString);
+};
+
 
 
 // Helper to generate time slots from 9AM to 5PM
@@ -152,13 +196,47 @@ export default function AppointmentBookingPage() {
                 today.setHours(0, 0, 0, 0);
                 return date < today;
               }}
+              modifiers={{
+                sunday: isSunday,
+                holiday: isIndianHoliday,
+              }}
+              modifiersStyles={{
+                sunday: { 
+                  color: '#dc2626', 
+                  fontWeight: 'bold',
+                  backgroundColor: '#fef2f2'
+                },
+                holiday: { 
+                  color: '#dc2626', 
+                  fontWeight: 'bold',
+                  backgroundColor: '#fef2f2'
+                },
+              }}
               className="w-full"
             />
           </div>
+          {/* Calendar Legend */}
+          <div className="mt-3 p-3 bg-gray-50 rounded-md">
+            <p className="text-xs font-medium text-gray-700 mb-2">Calendar Legend:</p>
+            <div className="flex flex-wrap gap-4 text-xs">
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-red-100 border border-red-200 rounded"></div>
+                <span className="text-red-600">Sundays & Holidays</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-blue-600 rounded"></div>
+                <span className="text-blue-600">Available Days</span>
+              </div>
+            </div>
+          </div>
+          
           {selectedDate && (
             <div className="mt-2 p-2 bg-blue-50 rounded-md">
               <p className="text-sm text-blue-700">
                 Selected: {format(selectedDate, "EEEE, MMMM d, yyyy")}
+                {(isSunday(selectedDate) || isIndianHoliday(selectedDate)) && (
+                  <span className="ml-2 text-red-600 font-medium">(Holiday/Sunday)</span>
+                )}
               </p>
             </div>
           )}

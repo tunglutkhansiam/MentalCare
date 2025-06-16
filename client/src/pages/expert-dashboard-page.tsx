@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Calendar, Clock, FileText, User as UserIcon, Briefcase, GraduationCap, Star } from "lucide-react";
+import { Calendar, Clock, FileText, User as UserIcon, Briefcase, GraduationCap, Star, LogOut } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import ExpertAppointmentCard from "../components/ui/expert-appointment-card";
@@ -22,7 +22,7 @@ type ExpertAppointment = Appointment & { user: User };
 type DetailedExpert = Expert & { specializations: Specialization[] };
 
 export default function ExpertDashboardPage() {
-  const { user, expert, isExpert } = useAuth();
+  const { user, expert, isExpert, logoutMutation } = useAuth();
   const [activeTab, setActiveTab] = useState("upcoming");
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -96,7 +96,19 @@ export default function ExpertDashboardPage() {
     <MobileLayout>
       <div className="container pt-6 pb-20">
         <div className="flex flex-col space-y-4">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Expert Dashboard</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Expert Dashboard</h1>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => logoutMutation.mutateAsync()}
+              disabled={logoutMutation.isPending}
+              className="flex items-center gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </Button>
+          </div>
           <Card className="overflow-hidden border-0 shadow-modern-lg bg-gradient-to-br from-white to-blue-50">
             <CardHeader className="pb-2">
               <CardTitle className="text-2xl font-bold text-gray-800">{detailedExpert?.name}</CardTitle>

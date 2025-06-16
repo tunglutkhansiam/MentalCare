@@ -182,7 +182,7 @@ export default function ExpertProfilePage() {
         
         <div className="flex flex-col items-center space-y-3">
           <Button onClick={handleBookAppointment} size="sm" className="tap-highlight-none px-6 py-2 h-9 text-sm">
-            Book Free Consultation
+            Book Appointment
           </Button>
           <Button onClick={handleMessage} variant="outline" size="sm" className="border-primary text-primary tap-highlight-none px-6 py-2 h-9 text-sm">
             Send Message

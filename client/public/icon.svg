@@ -1,0 +1,11 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="64" fill="#3b82f6"/>
+  <g fill="white">
+    <!-- Heart symbol representing care -->
+    <path d="M256 448l-35.2-32C150.4 358.4 96 310.8 96 256c0-35.2 28.8-64 64-64 20.8 0 40 10.4 51.2 27.2L256 275.2l44.8-56C312 202.4 331.2 192 352 192c35.2 0 64 28.8 64 64 0 54.8-54.4 102.4-124.8 160L256 448z"/>
+    <!-- Medical cross -->
+    <rect x="236" y="120" width="40" height="120" rx="4"/>
+    <rect x="196" y="160" width="120" height="40" rx="4"/>
+  </g>
+  <text x="256" y="400" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="48" font-weight="bold">MC</text>
+</svg>

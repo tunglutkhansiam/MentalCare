@@ -51,3 +51,11 @@ export function formatAppointmentReminderSMS(
 ): string {
   return `Reminder: You have a MentalCare appointment tomorrow with ${expertName} at ${appointmentTime}. We look forward to seeing you!`;
 }
+
+export function formatExpertNotificationSMS(
+  patientName: string,
+  appointmentDate: string,
+  appointmentTime: string
+): string {
+  return `New MentalCare Appointment Booked!\n\nPatient: ${patientName}\nDate: ${appointmentDate}\nTime: ${appointmentTime}\n\nPlease prepare for your upcoming session.`;
+}

@@ -44,6 +44,7 @@ export const experts = pgTable("experts", {
   rating: integer("rating"),
   reviewCount: integer("review_count"),
   profileImage: text("profile_image"),
+  phoneNumber: text("phone_number"),
   isAvailable: boolean("is_available").default(true),
 });
 

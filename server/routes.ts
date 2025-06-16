@@ -154,33 +154,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Creating appointment for authenticated user ${req.user.id} with expert ${secureAppointmentData.expertId}`);
       const appointment = await storage.createAppointment(secureAppointmentData);
       
-      // Send SMS notification if user has phone number
-      if (req.user.phoneNumber) {
-        try {
-          const expert = await storage.getExpert(appointment.expertId);
-          if (expert) {
-            const { sendSMS, formatAppointmentConfirmationSMS } = await import('./sms');
-            const message = formatAppointmentConfirmationSMS(
+      // Send SMS notifications to both user and expert
+      try {
+        const expert = await storage.getExpert(appointment.expertId);
+        if (expert) {
+          const { sendSMS, formatAppointmentConfirmationSMS, formatExpertNotificationSMS } = await import('./sms');
+          
+          // Send confirmation SMS to user if they have a phone number
+          if (req.user.phoneNumber) {
+            const userMessage = formatAppointmentConfirmationSMS(
               expert.name,
               appointment.date,
               appointment.time
             );
             
-            const smsSent = await sendSMS({
+            const userSmsSent = await sendSMS({
               to: req.user.phoneNumber,
-              message: message
+              message: userMessage
             });
             
-            if (smsSent) {
-              console.log(`SMS confirmation sent to ${req.user.phoneNumber}`);
+            if (userSmsSent) {
+              console.log(`SMS confirmation sent to user ${req.user.phoneNumber}`);
             } else {
-              console.log(`SMS notification failed for appointment ${appointment.id}`);
+              console.log(`User SMS notification failed for appointment ${appointment.id}`);
             }
           }
-        } catch (smsError) {
-          console.error("Error sending SMS notification:", smsError);
-          // Don't fail the appointment creation if SMS fails
+          
+          // Send notification SMS to expert if they have a phone number
+          if (expert.phoneNumber) {
+            const expertMessage = formatExpertNotificationSMS(
+              `${req.user.firstName} ${req.user.lastName}`,
+              appointment.date,
+              appointment.time
+            );
+            
+            const expertSmsSent = await sendSMS({
+              to: expert.phoneNumber,
+              message: expertMessage
+            });
+            
+            if (expertSmsSent) {
+              console.log(`SMS notification sent to expert ${expert.phoneNumber}`);
+            } else {
+              console.log(`Expert SMS notification failed for appointment ${appointment.id}`);
+            }
+          }
         }
+      } catch (smsError) {
+        console.error("Error sending SMS notifications:", smsError);
+        // Don't fail the appointment creation if SMS fails
       }
       
       res.status(201).json(appointment);

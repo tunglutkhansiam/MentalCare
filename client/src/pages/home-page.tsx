@@ -28,8 +28,8 @@ export default function HomePage() {
     enabled: !isExpert, // Only fetch if not an expert
   });
   
-  const { data: upcomingAppointment, isLoading: loadingAppointment } = useQuery<(Appointment & { expert: Expert }) | undefined>({
-    queryKey: ["/api/appointments/upcoming", user?.id],
+  const { data: upcomingAppointments, isLoading: loadingAppointment } = useQuery<(Appointment & { expert: Expert })[]>({
+    queryKey: ["/api/appointments/upcoming/all", user?.id],
     enabled: !!user?.id && !isExpert, // Only fetch for users who aren't experts
   });
 
@@ -273,12 +273,25 @@ export default function HomePage() {
               </Card>
             </div>
 
-            {/* Upcoming Appointment */}
+            {/* Upcoming Appointments */}
             <div className="mb-6">
-              <h2 className="text-lg font-semibold mb-3">Upcoming Appointment</h2>
+              <div className="flex justify-between items-center mb-3">
+                <h2 className="text-lg font-semibold">Upcoming Appointments</h2>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => navigate("/appointments")}
+                >
+                  View all
+                </Button>
+              </div>
               
-              {upcomingAppointment ? (
-                <AppointmentCard appointment={upcomingAppointment} />
+              {upcomingAppointments && upcomingAppointments.length > 0 ? (
+                <div className="space-y-3">
+                  {upcomingAppointments.map(appointment => (
+                    <AppointmentCard key={appointment.id} appointment={appointment} />
+                  ))}
+                </div>
               ) : (
                 <Card>
                   <CardContent className="p-4 text-center py-8">

@@ -48,7 +48,7 @@ export default function AppointmentCard({
   };
 
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm">
+    <div className="bg-white rounded-xl mobile-card shadow-sm tap-highlight-none">
       <div className="flex justify-between items-start mb-3">
         <div className="flex items-center">
           <div className={`w-12 h-12 rounded-full flex items-center justify-center mr-3 ${
@@ -59,7 +59,7 @@ export default function AppointmentCard({
             </span>
           </div>
           <div>
-            <h3 className="font-medium">Dr. {expert?.name || "Doctor"}</h3>
+            <h3 className="font-medium mobile-text">Dr. {expert?.name || "Doctor"}</h3>
             <p className="text-sm text-muted-foreground">{expert?.specialty || "Specialist"}</p>
           </div>
         </div>
@@ -71,20 +71,20 @@ export default function AppointmentCard({
       <div className="flex items-center justify-between text-sm text-muted-foreground border-t border-gray-100 pt-3">
         <div className="flex items-center">
           <Clock className="h-4 w-4 text-muted-foreground mr-1" />
-          <span>{displayDate}</span>
+          <span className="mobile-text">{displayDate}</span>
         </div>
         {showActions && !isPast && (
           <div className="flex space-x-2">
             <Button 
               variant="link" 
-              className="text-primary font-medium p-0 h-auto"
+              className="text-primary font-medium p-0 h-auto touch-target tap-highlight-none"
               onClick={handleJoinCall}
             >
               Join Call
             </Button>
             <Button 
               variant="link" 
-              className="text-muted-foreground font-medium p-0 h-auto"
+              className="text-muted-foreground font-medium p-0 h-auto touch-target tap-highlight-none"
               onClick={handleReschedule}
             >
               Reschedule
@@ -95,14 +95,14 @@ export default function AppointmentCard({
           <div className="flex space-x-2">
             <Button 
               variant="link" 
-              className="text-primary font-medium p-0 h-auto"
+              className="text-primary font-medium p-0 h-auto touch-target tap-highlight-none"
               onClick={handleViewNotes}
             >
               View Notes
             </Button>
             <Button 
               variant="link" 
-              className="text-muted-foreground font-medium p-0 h-auto"
+              className="text-muted-foreground font-medium p-0 h-auto touch-target tap-highlight-none"
               onClick={handleBookAgain}
             >
               Book Again

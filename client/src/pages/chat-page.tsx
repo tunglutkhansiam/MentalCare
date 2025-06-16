@@ -337,14 +337,14 @@ export default function ChatPage() {
       <div className="bg-primary py-4 px-4 text-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <button onClick={handleBackClick} className="mr-3">
+            <button onClick={handleBackClick} className="mr-3 touch-target tap-highlight-none">
               <ArrowLeft className="h-5 w-5" />
             </button>
             {renderHeaderContent()}
           </div>
           <button 
             onClick={() => cleanupChat()} 
-            className="text-xs bg-blue-600 hover:bg-blue-700 rounded px-2 py-1"
+            className="text-xs bg-blue-600 hover:bg-blue-700 rounded px-2 py-1 touch-target tap-highlight-none"
             title="Remove duplicate messages"
           >
             Fix Chat
@@ -352,7 +352,7 @@ export default function ChatPage() {
         </div>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-4 bg-gray-100 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 bg-gray-100 space-y-4 touch-scroll">
         {isLoading ? (
           Array(4).fill(0).map((_, i) => (
             <ChatMessageSkeleton key={i} isUser={i % 2 !== 0} />
@@ -367,7 +367,7 @@ export default function ChatPage() {
           ))
         ) : (
           <div className="text-center py-10">
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground mobile-text">
               Start a conversation with {isExpert 
                 ? `${chatUser?.firstName || ''} ${chatUser?.lastName || chatUser?.username || ''}` 
                 : chatExpert?.name}
@@ -383,7 +383,7 @@ export default function ChatPage() {
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
             placeholder="Type your message..."
-            className="flex-1 rounded-r-none"
+            className="mobile-input flex-1 rounded-r-none tap-highlight-none"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -393,7 +393,7 @@ export default function ChatPage() {
           />
           <Button 
             onClick={handleSendMessage}
-            className="rounded-l-none"
+            className="mobile-button rounded-l-none tap-highlight-none"
             disabled={!messageText.trim()}
           >
             <Send className="h-5 w-5" />

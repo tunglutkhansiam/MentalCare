@@ -153,6 +153,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Creating appointment for authenticated user ${req.user.id} with expert ${secureAppointmentData.expertId}`);
       const appointment = await storage.createAppointment(secureAppointmentData);
+      
+      // Send SMS notification if user has phone number
+      if (req.user.phoneNumber) {
+        try {
+          const expert = await storage.getExpert(appointment.expertId);
+          if (expert) {
+            const { sendSMS, formatAppointmentConfirmationSMS } = await import('./sms');
+            const message = formatAppointmentConfirmationSMS(
+              expert.name,
+              appointment.date,
+              appointment.time
+            );
+            
+            const smsSent = await sendSMS({
+              to: req.user.phoneNumber,
+              message: message
+            });
+            
+            if (smsSent) {
+              console.log(`SMS confirmation sent to ${req.user.phoneNumber}`);
+            } else {
+              console.log(`SMS notification failed for appointment ${appointment.id}`);
+            }
+          }
+        } catch (smsError) {
+          console.error("Error sending SMS notification:", smsError);
+          // Don't fail the appointment creation if SMS fails
+        }
+      }
+      
       res.status(201).json(appointment);
     } catch (err) {
       if (err instanceof z.ZodError) {

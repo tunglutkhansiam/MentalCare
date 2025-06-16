@@ -30,6 +30,7 @@ const loginSchema = z.object({
 
 const registerSchema = insertUserSchema
   .extend({
+    phoneNumber: z.string().min(1, "Mobile phone number is required").regex(/^\+?[1-9]\d{1,14}$/, "Please enter a valid phone number"),
     confirmPassword: z.string().min(1, "Please confirm your password"),
     termsAccepted: z.literal(true, {
       errorMap: () => ({ message: "You must accept the terms and conditions" }),
@@ -75,8 +76,9 @@ export default function AuthPage() {
       firstName: "",
       lastName: "",
       email: "",
+      phoneNumber: "",
       dateOfBirth: "",
-      termsAccepted: false,
+      termsAccepted: true,
     },
   });
 
@@ -274,6 +276,20 @@ export default function AuthPage() {
 
                     <FormField
                       control={registerForm.control}
+                      name="phoneNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Mobile Phone</FormLabel>
+                          <FormControl>
+                            <Input type="tel" placeholder="+1234567890" {...field} value={field.value || ""} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={registerForm.control}
                       name="confirmPassword"
                       render={({ field }) => (
                         <FormItem>
@@ -293,7 +309,7 @@ export default function AuthPage() {
                         <FormItem>
                           <FormLabel>Date of Birth</FormLabel>
                           <FormControl>
-                            <Input type="date" {...field} />
+                            <Input type="date" {...field} value={field.value || ""} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

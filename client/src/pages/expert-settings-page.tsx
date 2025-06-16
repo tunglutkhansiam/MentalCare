@@ -35,7 +35,7 @@ const expertProfileSchema = z.object({
 type ExpertProfileFormValues = z.infer<typeof expertProfileSchema>;
 
 export default function ExpertSettingsPage() {
-  const { user, logoutMutation } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const { data: expertProfile, isLoading } = useQuery<Expert>({
@@ -94,9 +94,7 @@ export default function ExpertSettingsPage() {
     updateExpertProfileMutation.mutate(data);
   };
 
-  const handleLogout = () => {
-    logoutMutation.mutate();
-  };
+
 
   if (isLoading) {
     return <ExpertSettingsSkeleton />;
@@ -238,15 +236,7 @@ export default function ExpertSettingsPage() {
                 {updateExpertProfileMutation.isPending ? "Updating..." : "Update Profile"}
               </Button>
 
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="w-full border-red-200 text-red-600 hover:bg-red-50"
-                onClick={handleLogout}
-                disabled={logoutMutation.isPending}
-              >
-                {logoutMutation.isPending ? "Logging out..." : "Logout"}
-              </Button>
+
             </div>
           </form>
         </Form>

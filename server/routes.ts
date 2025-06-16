@@ -231,6 +231,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Update expert profile
+  app.put("/api/expert-profile", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const expert = await storage.getExpertByUserId(req.user.id);
+      if (!expert) {
+        return res.status(404).json({ message: "Expert profile not found" });
+      }
+      
+      const updatedExpert = await storage.updateExpert(expert.id, req.body);
+      res.json(updatedExpert);
+    } catch (err) {
+      console.error("Error updating expert profile:", err);
+      res.status(500).json({ message: "Failed to update expert profile" });
+    }
+  });
+
   // Get expert profile with specializations
   app.get("/api/expert-profile/detailed", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

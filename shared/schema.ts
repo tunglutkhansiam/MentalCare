@@ -29,7 +29,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   dateOfBirth: true,
   phoneNumber: true,
 }).extend({
-  phoneNumber: z.string().min(1, "Phone number is required"),
+  phoneNumber: z.string().optional(),
 });
 
 // Health expert schema

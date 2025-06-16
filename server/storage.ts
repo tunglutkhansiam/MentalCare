@@ -24,6 +24,7 @@ export interface IStorage {
   getExpert(id: number): Promise<Expert | undefined>;
   getExpertByUserId(userId: number): Promise<Expert | undefined>;
   createExpert(expert: InsertExpert): Promise<Expert>;
+  updateExpert(id: number, expertData: Partial<Expert>): Promise<Expert>;
   
   // Specialization methods
   getSpecializationsByExpert(expertId: number): Promise<Specialization[]>;
@@ -249,6 +250,15 @@ export class DatabaseStorage implements IStorage {
   async createExpert(expert: InsertExpert): Promise<Expert> {
     const [newExpert] = await db.insert(experts).values(expert).returning();
     return newExpert;
+  }
+
+  async updateExpert(id: number, expertData: Partial<Expert>): Promise<Expert> {
+    const [updatedExpert] = await db
+      .update(experts)
+      .set(expertData)
+      .where(eq(experts.id, id))
+      .returning();
+    return updatedExpert;
   }
   
   async getSpecializationsByExpert(expertId: number): Promise<Specialization[]> {

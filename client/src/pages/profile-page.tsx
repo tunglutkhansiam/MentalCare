@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -39,8 +39,8 @@ const profileSchema = z.object({
   phoneNumber: z.string().optional(),
   dateOfBirth: z.string().optional(),
   bloodType: z.string().optional(),
-  height: z.string().optional().transform(val => val ? parseInt(val) : undefined),
-  weight: z.string().optional().transform(val => val ? parseInt(val) : undefined),
+  height: z.string().optional(),
+  weight: z.string().optional(),
   allergies: z.string().optional(),
   chronicConditions: z.string().optional(),
 });
@@ -48,7 +48,7 @@ const profileSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 export default function ProfilePage() {
-  const { user, logoutMutation } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
 
@@ -82,21 +82,21 @@ export default function ProfilePage() {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      firstName: profileData?.firstName || "",
-      lastName: profileData?.lastName || "",
-      email: profileData?.email || "",
-      phoneNumber: profileData?.phoneNumber || "",
-      dateOfBirth: profileData?.dateOfBirth || "",
-      bloodType: profileData?.bloodType || "",
-      height: profileData?.height?.toString() || "",
-      weight: profileData?.weight?.toString() || "",
-      allergies: profileData?.allergies || "",
-      chronicConditions: profileData?.chronicConditions || "",
+      firstName: "",
+      lastName: "",
+      email: "",
+      phoneNumber: "",
+      dateOfBirth: "",
+      bloodType: "",
+      height: "",
+      weight: "",
+      allergies: "",
+      chronicConditions: "",
     },
   });
 
   // Update form values when profile data is loaded
-  useState(() => {
+  useEffect(() => {
     if (profileData) {
       form.reset({
         firstName: profileData.firstName,
@@ -111,14 +111,15 @@ export default function ProfilePage() {
         chronicConditions: profileData.chronicConditions || "",
       });
     }
-  });
+  }, [profileData, form]);
 
   const onSubmit = (data: ProfileFormValues) => {
-    updateProfileMutation.mutate(data);
-  };
-
-  const handleLogout = () => {
-    logoutMutation.mutate();
+    const submitData = {
+      ...data,
+      height: data.height ? parseInt(data.height) : undefined,
+      weight: data.weight ? parseInt(data.weight) : undefined,
+    };
+    updateProfileMutation.mutate(submitData);
   };
 
   if (isLoading) {
@@ -169,10 +170,7 @@ export default function ProfilePage() {
                         <FormItem>
                           <FormLabel className="text-sm text-muted-foreground">First Name</FormLabel>
                           <FormControl>
-                            <Input 
-                              disabled={!isEditing}
-                              {...field} 
-                            />
+                            <Input disabled={!isEditing} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -186,10 +184,7 @@ export default function ProfilePage() {
                         <FormItem>
                           <FormLabel className="text-sm text-muted-foreground">Last Name</FormLabel>
                           <FormControl>
-                            <Input 
-                              disabled={!isEditing}
-                              {...field} 
-                            />
+                            <Input disabled={!isEditing} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -204,11 +199,7 @@ export default function ProfilePage() {
                       <FormItem>
                         <FormLabel className="text-sm text-muted-foreground">Email</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="email"
-                            disabled={!isEditing}
-                            {...field} 
-                          />
+                          <Input disabled={!isEditing} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -222,11 +213,7 @@ export default function ProfilePage() {
                       <FormItem>
                         <FormLabel className="text-sm text-muted-foreground">Phone Number</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="tel"
-                            disabled={!isEditing}
-                            {...field} 
-                          />
+                          <Input disabled={!isEditing} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -241,7 +228,7 @@ export default function ProfilePage() {
                         <FormLabel className="text-sm text-muted-foreground">Date of Birth</FormLabel>
                         <FormControl>
                           <Input 
-                            type="date"
+                            type="date" 
                             disabled={!isEditing}
                             {...field} 
                           />
@@ -250,33 +237,21 @@ export default function ProfilePage() {
                       </FormItem>
                     )}
                   />
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="mb-6">
-              <CardContent className="p-4">
-                <h2 className="font-semibold mb-4">Medical Information</h2>
-                
-                <div className="space-y-4">
+                  
                   <FormField
                     control={form.control}
                     name="bloodType"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-sm text-muted-foreground">Blood Type</FormLabel>
-                        <Select
-                          disabled={!isEditing}
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
+                        <Select onValueChange={field.onChange} value={field.value} disabled={!isEditing}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select blood type" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {bloodTypes.map(type => (
+                            {bloodTypes.map((type) => (
                               <SelectItem key={type} value={type}>{type}</SelectItem>
                             ))}
                           </SelectContent>
@@ -388,15 +363,6 @@ export default function ProfilePage() {
             )}
           </form>
         </Form>
-        
-        <Button 
-          variant="outline" 
-          className="w-full border-red-500 text-red-500 hover:bg-red-50 hover:text-red-600"
-          onClick={handleLogout}
-          disabled={logoutMutation.isPending}
-        >
-          {logoutMutation.isPending ? "Logging out..." : "Log Out"}
-        </Button>
       </div>
     </MobileLayout>
   );
@@ -406,86 +372,76 @@ function ProfileSkeleton() {
   return (
     <MobileLayout>
       <div className="bg-primary py-6 px-4 text-white">
-        <Skeleton className="h-6 w-32 bg-blue-400" />
+        <h1 className="text-xl font-semibold">My Profile</h1>
       </div>
       
       <div className="px-4 py-6">
         <div className="flex items-center justify-center mb-6">
           <Skeleton className="w-24 h-24 rounded-full" />
         </div>
-        
+
         <Card className="mb-6">
           <CardContent className="p-4">
-            <div className="flex justify-between mb-4">
-              <Skeleton className="h-6 w-40" />
-              <Skeleton className="h-6 w-12" />
+            <div className="flex justify-between items-center mb-4">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-8 w-12" />
             </div>
             
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Skeleton className="h-4 w-20 mb-1" />
+                  <Skeleton className="h-4 w-20 mb-2" />
                   <Skeleton className="h-10 w-full" />
                 </div>
                 <div>
-                  <Skeleton className="h-4 w-20 mb-1" />
+                  <Skeleton className="h-4 w-20 mb-2" />
                   <Skeleton className="h-10 w-full" />
                 </div>
               </div>
               
               <div>
-                <Skeleton className="h-4 w-20 mb-1" />
+                <Skeleton className="h-4 w-12 mb-2" />
                 <Skeleton className="h-10 w-full" />
               </div>
               
               <div>
-                <Skeleton className="h-4 w-20 mb-1" />
+                <Skeleton className="h-4 w-24 mb-2" />
                 <Skeleton className="h-10 w-full" />
               </div>
               
               <div>
-                <Skeleton className="h-4 w-20 mb-1" />
+                <Skeleton className="h-4 w-20 mb-2" />
                 <Skeleton className="h-10 w-full" />
               </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <Skeleton className="h-6 w-40 mb-4" />
-            
-            <div className="space-y-4">
+              
               <div>
-                <Skeleton className="h-4 w-20 mb-1" />
+                <Skeleton className="h-4 w-20 mb-2" />
                 <Skeleton className="h-10 w-full" />
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Skeleton className="h-4 w-20 mb-1" />
+                  <Skeleton className="h-4 w-16 mb-2" />
                   <Skeleton className="h-10 w-full" />
                 </div>
                 <div>
-                  <Skeleton className="h-4 w-20 mb-1" />
+                  <Skeleton className="h-4 w-16 mb-2" />
                   <Skeleton className="h-10 w-full" />
                 </div>
               </div>
               
               <div>
-                <Skeleton className="h-4 w-20 mb-1" />
+                <Skeleton className="h-4 w-16 mb-2" />
                 <Skeleton className="h-20 w-full" />
               </div>
               
               <div>
-                <Skeleton className="h-4 w-20 mb-1" />
+                <Skeleton className="h-4 w-28 mb-2" />
                 <Skeleton className="h-20 w-full" />
               </div>
             </div>
           </CardContent>
         </Card>
-        
-        <Skeleton className="h-12 w-full rounded-lg" />
       </div>
     </MobileLayout>
   );

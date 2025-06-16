@@ -59,6 +59,13 @@ const isIndianHoliday = (date: Date): boolean => {
   return indianHolidays.includes(dateString);
 };
 
+// Function to check if a date is available (not Sunday or holiday, and not in the past)
+const isAvailableDay = (date: Date): boolean => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return date >= today && !isSunday(date) && !isIndianHoliday(date);
+};
+
 
 
 // Helper to generate time slots from 9AM to 5PM
@@ -199,6 +206,7 @@ export default function AppointmentBookingPage() {
               modifiers={{
                 sunday: isSunday,
                 holiday: isIndianHoliday,
+                available: isAvailableDay,
               }}
               modifiersStyles={{
                 sunday: { 
@@ -210,6 +218,11 @@ export default function AppointmentBookingPage() {
                   color: '#dc2626', 
                   fontWeight: 'bold',
                   backgroundColor: '#fef2f2'
+                },
+                available: {
+                  color: '#2563eb',
+                  fontWeight: 'bold',
+                  backgroundColor: '#eff6ff'
                 },
               }}
               className="w-full"
@@ -224,7 +237,7 @@ export default function AppointmentBookingPage() {
                 <span className="text-red-600">Sundays & Holidays</span>
               </div>
               <div className="flex items-center gap-1">
-                <div className="w-3 h-3 bg-blue-600 rounded"></div>
+                <div className="w-3 h-3 bg-blue-100 border border-blue-200 rounded"></div>
                 <span className="text-blue-600">Available Days</span>
               </div>
             </div>

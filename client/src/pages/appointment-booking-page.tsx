@@ -142,33 +142,26 @@ export default function AppointmentBookingPage() {
         {/* Date Selection */}
         <div className="mb-6">
           <h2 className="font-semibold mb-3">Select Date</h2>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !selectedDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                disabled={(date) => {
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-                  return date < today;
-                }}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+          <div className="border rounded-lg p-4 bg-white">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              disabled={(date) => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                return date < today;
+              }}
+              className="w-full"
+            />
+          </div>
+          {selectedDate && (
+            <div className="mt-2 p-2 bg-blue-50 rounded-md">
+              <p className="text-sm text-blue-700">
+                Selected: {format(selectedDate, "EEEE, MMMM d, yyyy")}
+              </p>
+            </div>
+          )}
         </div>
         
         {/* Time Selection */}

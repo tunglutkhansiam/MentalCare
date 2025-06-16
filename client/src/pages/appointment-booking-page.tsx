@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Calendar as CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -11,21 +11,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-// Helper to generate date options for the next 7 days
-function getDateOptions(): { day: string; date: number; month: string; value: string; }[] {
-  return Array(7).fill(0).map((_, index) => {
-    const date = new Date();
-    date.setDate(date.getDate() + index);
-    return {
-      day: format(date, 'EEE'),
-      date: parseInt(format(date, 'd')),
-      month: format(date, 'MMM'),
-      value: format(date, 'yyyy-MM-dd'),
-    };
-  });
-}
+
 
 // Helper to generate time slots from 9AM to 5PM
 function getTimeSlots(): { time: string; value: string }[] {
@@ -48,11 +38,10 @@ export default function AppointmentBookingPage() {
   const { toast } = useToast();
   const { user } = useAuth();
   
-  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [reason, setReason] = useState<string>("");
   
-  const dateOptions = getDateOptions();
   const timeSlots = getTimeSlots();
 
   const { data: expert, isLoading } = useQuery<Expert>({
@@ -108,7 +97,7 @@ export default function AppointmentBookingPage() {
     const appointmentData: InsertAppointment = {
       userId: user.id,
       expertId: parseInt(expertId),
-      date: selectedDate,
+      date: format(selectedDate, 'yyyy-MM-dd'),
       time: selectedTime,
       reason: reason,
     };
@@ -133,7 +122,7 @@ export default function AppointmentBookingPage() {
 
   // Format date for display in the summary
   const formattedDate = selectedDate ? 
-    format(new Date(selectedDate), 'EEEE, MMMM d, yyyy') : 'Select a date';
+    format(selectedDate, 'EEEE, MMMM d, yyyy') : 'Select a date';
   
   // Format time for display in the summary
   const formattedTime = selectedTime ? 
@@ -153,33 +142,33 @@ export default function AppointmentBookingPage() {
         {/* Date Selection */}
         <div className="mb-6">
           <h2 className="font-semibold mb-3">Select Date</h2>
-          <div className="flex space-x-3 overflow-x-auto pb-2">
-            {dateOptions.map((date, index) => (
-              <div 
-                key={index}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
                 className={cn(
-                  "flex-none rounded-lg p-3 w-16 flex flex-col items-center cursor-pointer",
-                  selectedDate === date.value 
-                    ? "bg-primary shadow-sm" 
-                    : "bg-card shadow-sm"
+                  "w-full justify-start text-left font-normal",
+                  !selectedDate && "text-muted-foreground"
                 )}
-                onClick={() => setSelectedDate(date.value)}
               >
-                <span className={cn(
-                  "text-xs",
-                  selectedDate === date.value ? "text-blue-100" : "text-muted-foreground"
-                )}>{date.day}</span>
-                <span className={cn(
-                  "text-lg font-medium",
-                  selectedDate === date.value ? "text-white" : ""
-                )}>{date.date}</span>
-                <span className={cn(
-                  "text-xs",
-                  selectedDate === date.value ? "text-blue-100" : "text-muted-foreground"
-                )}>{date.month}</span>
-              </div>
-            ))}
-          </div>
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                disabled={(date) => {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  return date < today;
+                }}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
         </div>
         
         {/* Time Selection */}

@@ -53,7 +53,8 @@ export default function ExpertCard({ expert }: ExpertCardProps) {
             </div>
             <div className="flex mt-3 space-x-2">
               <Button
-                className="mobile-button flex-1 tap-highlight-none"
+                size="sm"
+                className="tap-highlight-none px-4 py-2 h-8 text-sm"
                 onClick={handleKnowMore}
               >
                 Know More

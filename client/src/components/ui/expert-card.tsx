@@ -52,16 +52,8 @@ export default function ExpertCard({ expert }: ExpertCardProps) {
               </div>
             </div>
             <div className="flex mt-3 space-x-2">
-              <Button 
-                className="mobile-button flex-1 tap-highlight-none" 
-                onClick={handleBookAppointment}
-              >
-                Book Appointment
-              </Button>
               <Button
-                variant="outline"
-                size="sm"
-                className="mobile-button tap-highlight-none"
+                className="mobile-button flex-1 tap-highlight-none"
                 onClick={handleKnowMore}
               >
                 Know More

@@ -19,6 +19,10 @@ export default function ExpertCard({ expert }: ExpertCardProps) {
     navigate(`/chat/${expert.id}`);
   };
 
+  const handleKnowMore = (e: React.MouseEvent) => {
+    navigate(`/expert/${expert.id}`);
+  };
+
   return (
     <Card className="tap-highlight-none">
       <CardContent className="mobile-card">
@@ -53,6 +57,14 @@ export default function ExpertCard({ expert }: ExpertCardProps) {
                 onClick={handleBookAppointment}
               >
                 Book Appointment
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mobile-button tap-highlight-none"
+                onClick={handleKnowMore}
+              >
+                Know More
               </Button>
               <Button
                 variant="ghost"

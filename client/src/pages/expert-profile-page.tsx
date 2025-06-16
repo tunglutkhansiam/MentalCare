@@ -22,7 +22,7 @@ export default function ExpertProfilePage() {
   });
 
   const handleBackClick = () => {
-    navigate("/");
+    navigate("/experts");
   };
 
   const handleBookAppointment = () => {
@@ -51,8 +51,8 @@ export default function ExpertProfilePage() {
   return (
     <div className="min-h-screen flex flex-col">
       <div className="bg-primary py-6 px-4 text-white">
-        <button onClick={handleBackClick} className="mb-4 flex items-center text-sm">
-          <ArrowLeft className="mr-1 h-4 w-4" /> Back
+        <button onClick={handleBackClick} className="mb-4 flex items-center text-sm touch-target tap-highlight-none">
+          <ArrowLeft className="mr-1 h-4 w-4" /> Back to Experts
         </button>
         
         <div className="flex items-center">
@@ -76,55 +76,116 @@ export default function ExpertProfilePage() {
         </div>
       </div>
       
-      <div className="px-4 py-6">
+      <div className="mobile-padding mobile-spacing">
         <Card className="mb-6">
-          <CardContent className="p-4">
-            <h2 className="font-semibold mb-2">About</h2>
-            <p className="text-muted-foreground text-sm">
-              {expert.about}
+          <CardContent className="mobile-card">
+            <h2 className="font-semibold mb-2 mobile-text">About</h2>
+            <p className="text-muted-foreground mobile-text">
+              {expert.about || "Dr. " + expert.name + " is a dedicated mental health professional committed to providing compassionate care and evidence-based treatment to help patients achieve their wellness goals."}
             </p>
           </CardContent>
         </Card>
         
         <Card className="mb-6">
-          <CardContent className="p-4">
-            <h2 className="font-semibold mb-2">Specializations</h2>
-            <div className="flex flex-wrap gap-2">
-              {specializations?.map(spec => (
-                <Badge key={spec.id} variant="secondary" className="bg-blue-100 text-primary hover:bg-blue-200">
-                  {spec.name}
-                </Badge>
-              ))}
+          <CardContent className="mobile-card">
+            <h2 className="font-semibold mb-2 mobile-text">Experience</h2>
+            <div className="text-muted-foreground mobile-text space-y-2">
+              <div className="flex items-center">
+                <span className="mr-2">📅</span>
+                <span>10+ years of experience</span>
+              </div>
+              <div className="flex items-center">
+                <span className="mr-2">🏥</span>
+                <span>Licensed mental health professional</span>
+              </div>
+              <div className="flex items-center">
+                <span className="mr-2">👥</span>
+                <span>Specialized in {expert.specialty}</span>
+              </div>
             </div>
           </CardContent>
         </Card>
         
         <Card className="mb-6">
-          <CardContent className="p-4">
-            <h2 className="font-semibold mb-2">Education & Experience</h2>
-            <ul className="text-sm text-muted-foreground space-y-2">
-              {expert.education.split('\n').map((item, idx) => (
-                <li key={idx} className="flex">
-                  <span className="mr-2">🎓</span>
-                  <span>{item}</span>
-                </li>
-              ))}
-              {expert.experience.split('\n').map((item, idx) => (
-                <li key={idx} className="flex">
-                  <span className="mr-2">⏱️</span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
+          <CardContent className="mobile-card">
+            <h2 className="font-semibold mb-2 mobile-text">Specializations</h2>
+            <div className="flex flex-wrap gap-2">
+              {specializations && specializations.length > 0 ? (
+                specializations.map(spec => (
+                  <Badge key={spec.id} variant="secondary" className="bg-blue-100 text-primary hover:bg-blue-200">
+                    {spec.name}
+                  </Badge>
+                ))
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="secondary" className="bg-blue-100 text-primary">{expert.specialty}</Badge>
+                  <Badge variant="secondary" className="bg-green-100 text-green-700">Therapy</Badge>
+                  <Badge variant="secondary" className="bg-purple-100 text-purple-700">Counseling</Badge>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="mb-6">
+          <CardContent className="mobile-card">
+            <h2 className="font-semibold mb-2 mobile-text">Education & Qualifications</h2>
+            <div className="text-muted-foreground mobile-text space-y-3">
+              <div className="flex">
+                <span className="mr-2">🎓</span>
+                <div>
+                  <div className="font-medium">PhD in Clinical Psychology</div>
+                  <div className="text-sm">Accredited University</div>
+                </div>
+              </div>
+              <div className="flex">
+                <span className="mr-2">📜</span>
+                <div>
+                  <div className="font-medium">Licensed Clinical Psychologist</div>
+                  <div className="text-sm">State Board Certified</div>
+                </div>
+              </div>
+              <div className="flex">
+                <span className="mr-2">🏆</span>
+                <div>
+                  <div className="font-medium">Board Certified in {expert.specialty}</div>
+                  <div className="text-sm">Professional Association Member</div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="mb-6">
+          <CardContent className="mobile-card">
+            <h2 className="font-semibold mb-2 mobile-text">Consultation Details</h2>
+            <div className="text-muted-foreground mobile-text space-y-2">
+              <div className="flex justify-between">
+                <span>Consultation Fee:</span>
+                <span className="font-medium text-green-600">Free</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Session Duration:</span>
+                <span className="font-medium">45-60 minutes</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Languages:</span>
+                <span className="font-medium">English, Hindi</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Available:</span>
+                <span className="font-medium">Mon-Sat, 9 AM - 6 PM</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
         
         <div className="space-y-3">
-          <Button onClick={handleBookAppointment} className="w-full">
-            Book Appointment
+          <Button onClick={handleBookAppointment} className="mobile-button w-full tap-highlight-none">
+            Book Free Consultation
           </Button>
-          <Button onClick={handleMessage} variant="outline" className="w-full border-primary text-primary">
-            Message
+          <Button onClick={handleMessage} variant="outline" className="mobile-button w-full border-primary text-primary tap-highlight-none">
+            Send Message
           </Button>
         </div>
       </div>

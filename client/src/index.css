@@ -101,6 +101,47 @@
   }
 }
 
+/* Mobile-friendly touch interactions */
+@layer utilities {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .tap-highlight-none {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .touch-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  
+  .mobile-padding {
+    @apply px-4 py-3;
+  }
+  
+  .mobile-spacing {
+    @apply space-y-4;
+  }
+  
+  .mobile-text {
+    @apply text-base leading-relaxed;
+  }
+  
+  .mobile-button {
+    @apply h-12 px-6 text-base font-medium touch-target tap-highlight-none;
+  }
+  
+  .mobile-input {
+    @apply h-12 px-4 text-base touch-target tap-highlight-none;
+  }
+  
+  .mobile-card {
+    @apply p-4 rounded-xl;
+  }
+}
+
 .chat-bubble-user {
   border-radius: 18px 18px 0 18px;
 }

@@ -93,10 +93,10 @@ export default function HomePage() {
   return (
     <MobileLayout>
       <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen">
-        <div className="px-4 py-6">
+        <div className="mobile-padding mobile-spacing">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Hi, {isExpert ? expert?.name : user?.firstName || "User"}!
               </h1>
               <p className="text-gray-600 text-sm mt-1">
@@ -109,13 +109,13 @@ export default function HomePage() {
                 size="sm"
                 onClick={() => logoutMutation.mutateAsync()}
                 disabled={logoutMutation.isPending}
-                className="flex items-center gap-2"
+                className="mobile-button flex items-center gap-2 tap-highlight-none"
               >
                 <LogOut className="h-4 w-4" />
                 Logout
               </Button>
               <div 
-                className="h-12 w-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg cursor-pointer transform hover:scale-105 transition-transform duration-200"
+                className="touch-target bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg cursor-pointer transform hover:scale-105 transition-transform duration-200 tap-highlight-none"
                 onClick={() => navigate("/profile")}
               >
                 <span className="text-white font-bold text-sm">
@@ -160,38 +160,38 @@ export default function HomePage() {
             {/* Quick Actions */}
             <div className="grid grid-cols-3 gap-4 mb-6">
               <Card 
-                className="cursor-pointer hover:shadow-md transition-shadow" 
+                className="cursor-pointer hover:shadow-md transition-shadow tap-highlight-none" 
                 onClick={handleViewExpertDashboard}
               >
-                <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+                <CardContent className="mobile-card flex flex-col items-center justify-center text-center touch-target">
                   <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-2">
                     <Briefcase className="h-6 w-6 text-blue-600" />
                   </div>
-                  <span className="font-medium">Dashboard</span>
+                  <span className="font-medium mobile-text">Dashboard</span>
                 </CardContent>
               </Card>
               
               <Card 
-                className="cursor-pointer hover:shadow-md transition-shadow" 
+                className="cursor-pointer hover:shadow-md transition-shadow tap-highlight-none" 
                 onClick={handleViewAppointments}
               >
-                <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+                <CardContent className="mobile-card flex flex-col items-center justify-center text-center touch-target">
                   <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-2">
                     <Calendar className="h-6 w-6 text-green-600" />
                   </div>
-                  <span className="font-medium">Appointments</span>
+                  <span className="font-medium mobile-text">Appointments</span>
                 </CardContent>
               </Card>
               
               <Card 
-                className="cursor-pointer hover:shadow-md transition-shadow" 
+                className="cursor-pointer hover:shadow-md transition-shadow tap-highlight-none" 
                 onClick={() => navigate("/profile")}
               >
-                <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+                <CardContent className="mobile-card flex flex-col items-center justify-center text-center touch-target">
                   <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-2">
                     <UserIcon className="h-6 w-6 text-purple-600" />
                   </div>
-                  <span className="font-medium">Profile</span>
+                  <span className="font-medium mobile-text">Profile</span>
                 </CardContent>
               </Card>
             </div>

@@ -182,14 +182,14 @@ export default function AppointmentBookingPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <div className="bg-primary py-6 px-4 text-white">
-        <button onClick={handleBackClick} className="mb-4 flex items-center text-sm">
+        <button onClick={handleBackClick} className="mb-4 flex items-center text-sm touch-target tap-highlight-none">
           <ArrowLeft className="mr-1 h-4 w-4" /> Back
         </button>
         <h1 className="text-xl font-semibold">Book Appointment</h1>
         <p className="text-blue-100">{expert.name}, {expert.specialty}</p>
       </div>
       
-      <div className="px-4 py-6">
+      <div className="mobile-padding mobile-spacing">
         {/* Date Selection */}
         <div className="mb-6">
           <h2 className="font-semibold mb-3">Select Date</h2>
@@ -263,15 +263,15 @@ export default function AppointmentBookingPage() {
               <div 
                 key={index}
                 className={cn(
-                  "border rounded-lg p-3 text-center cursor-pointer",
+                  "border rounded-lg text-center cursor-pointer tap-highlight-none transition-colors touch-target",
                   selectedTime === slot.value 
                     ? "bg-primary border-primary" 
-                    : "bg-card border-border"
+                    : "bg-card border-border hover:bg-gray-50"
                 )}
                 onClick={() => setSelectedTime(slot.value)}
               >
                 <span className={cn(
-                  "text-sm",
+                  "mobile-text font-medium",
                   selectedTime === slot.value ? "text-white" : ""
                 )}>{slot.time}</span>
               </div>
@@ -293,7 +293,7 @@ export default function AppointmentBookingPage() {
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="Briefly describe your symptoms or concerns..."
-                className="w-full p-3 border rounded-lg"
+                className="mobile-input w-full border rounded-lg tap-highlight-none"
               />
             </div>
           </CardContent>
@@ -329,7 +329,7 @@ export default function AppointmentBookingPage() {
         </Card>
         
         <Button 
-          className="w-full"
+          className="mobile-button w-full tap-highlight-none"
           onClick={handleConfirmAppointment}
           disabled={!selectedDate || !selectedTime || bookAppointmentMutation.isPending}
         >

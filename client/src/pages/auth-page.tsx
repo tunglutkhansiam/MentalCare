@@ -20,7 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 
 // Import the SVG background image
-import mentalHealthBg from "../assets/mental-health-bg.svg";
+import mentalHealthBg from "@/assets/mental-health-bg.svg";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),

@@ -1,7 +1,7 @@
-import { User, InsertUser, Expert, InsertExpert, Specialization, InsertSpecialization, Appointment, InsertAppointment, Message, InsertMessage, Category, InsertCategory, QuestionnaireResponse, InsertQuestionnaireResponse } from "@shared/schema";
+import { User, InsertUser, Expert, InsertExpert, Specialization, InsertSpecialization, Appointment, InsertAppointment, Message, InsertMessage, Category, InsertCategory } from "@shared/schema";
 import { db } from "./db";
 import { and, eq, sql, or, gt } from "drizzle-orm";
-import { users, experts, specializations, appointments, messages, categories, questionnaireResponses } from "@shared/schema";
+import { users, experts, specializations, appointments, messages, categories } from "@shared/schema";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -50,11 +50,6 @@ export interface IStorage {
   // Category methods
   getCategories(): Promise<Category[]>;
   createCategory(category: InsertCategory): Promise<Category>;
-  
-  // Questionnaire Response methods
-  getQuestionnaireResponseByUser(userId: number, questionnaireId: number): Promise<QuestionnaireResponse | undefined>;
-  createQuestionnaireResponse(response: InsertQuestionnaireResponse): Promise<QuestionnaireResponse>;
-  updateQuestionnaireResponse(id: number, response: Partial<QuestionnaireResponse>): Promise<QuestionnaireResponse>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -579,41 +574,6 @@ export class DatabaseStorage implements IStorage {
   async createCategory(category: InsertCategory): Promise<Category> {
     const [newCategory] = await db.insert(categories).values(category).returning();
     return newCategory;
-  }
-  
-  async getQuestionnaireResponseByUser(userId: number, questionnaireId: number): Promise<QuestionnaireResponse | undefined> {
-    const [response] = await db
-      .select()
-      .from(questionnaireResponses)
-      .where(
-        and(
-          eq(questionnaireResponses.userId, userId),
-          eq(questionnaireResponses.questionnaireId, questionnaireId)
-        )
-      );
-    return response || undefined;
-  }
-  
-  async createQuestionnaireResponse(response: InsertQuestionnaireResponse): Promise<QuestionnaireResponse> {
-    const [newResponse] = await db
-      .insert(questionnaireResponses)
-      .values(response)
-      .returning();
-    return newResponse;
-  }
-  
-  async updateQuestionnaireResponse(id: number, response: Partial<QuestionnaireResponse>): Promise<QuestionnaireResponse> {
-    const [updatedResponse] = await db
-      .update(questionnaireResponses)
-      .set(response)
-      .where(eq(questionnaireResponses.id, id))
-      .returning();
-    
-    if (!updatedResponse) {
-      throw new Error("Questionnaire response not found");
-    }
-    
-    return updatedResponse;
   }
 }
 

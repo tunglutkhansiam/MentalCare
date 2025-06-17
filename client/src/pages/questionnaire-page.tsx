@@ -7,8 +7,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
@@ -27,7 +25,7 @@ export default function QuestionnairePage() {
   
   // State for tracking current question and answers
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, any>>({});
+  const [answers, setAnswers] = useState<Record<number, number>>({});
   const [completed, setCompleted] = useState(false);
   const [score, setScore] = useState<number | null>(null);
   
@@ -41,38 +39,24 @@ export default function QuestionnairePage() {
   const submitMutation = useMutation({
     mutationFn: async (responseData: {
       questionnaireId: number;
-      responses: Record<number, any>;
+      responses: { questionId: number; answerId: number; value: number }[];
+      score: number;
     }) => {
-      console.log("Starting API request with data:", responseData);
-      try {
-        const res = await apiRequest("POST", "/api/questionnaire-responses", responseData);
-        console.log("API response status:", res.status);
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        }
-        const result = await res.json();
-        console.log("API response data:", result);
-        return result;
-      } catch (error) {
-        console.error("API request failed:", error);
-        throw error;
-      }
+      const res = await apiRequest("POST", "/api/questionnaire-responses", responseData);
+      return await res.json();
     },
-    onSuccess: (data) => {
-      console.log("Questionnaire submitted successfully:", data);
+    onSuccess: () => {
       setCompleted(true);
-      // Show thank you popup
       toast({
-        title: "Thank you for completing the questionnaire!",
-        description: "Your information has been saved and will be available to your mental health professional during appointments.",
+        title: "Assessment completed",
+        description: "Your responses have been recorded.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/user/questionnaire-responses"] });
     },
     onError: (error) => {
-      console.error("Questionnaire submission error:", error);
       toast({
         title: "Submission failed",
-        description: error.message || "An unexpected error occurred",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -97,11 +81,7 @@ export default function QuestionnairePage() {
   const questions = questionnaire.questions as Array<{
     id: number;
     text: string;
-    type?: string;
-    required?: boolean;
-    min?: number;
-    max?: number;
-    options?: Array<{
+    options: Array<{
       id: number;
       text: string;
       value: number;
@@ -111,70 +91,48 @@ export default function QuestionnairePage() {
   const currentQuestion = questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
   
-  // Debug logs - only show on last question to avoid spam
-  if (currentQuestionIndex === questions.length - 1) {
-    console.log("=== ON LAST QUESTION ===");
-    console.log("Current question index:", currentQuestionIndex);
-    console.log("Total questions:", questions.length);
-    console.log("Current question:", currentQuestion?.text);
-    console.log("Current answers:", answers);
-    console.log("Submit mutation state:", {
-      isPending: submitMutation.isPending,
-      isError: submitMutation.isError,
-      error: submitMutation.error
-    });
-  }
-  
-  const handleAnswer = (value: any) => {
+  const handleAnswer = (optionId: number, value: number) => {
     setAnswers({
       ...answers,
-      [currentQuestion.id]: value,
-    });
-  };
-
-  const handleCheckboxChange = (optionId: number, checked: boolean) => {
-    const currentAnswers = answers[currentQuestion.id] || [];
-    let newAnswers;
-    
-    if (checked) {
-      newAnswers = [...currentAnswers, optionId];
-    } else {
-      newAnswers = currentAnswers.filter((id: number) => id !== optionId);
-    }
-    
-    setAnswers({
-      ...answers,
-      [currentQuestion.id]: newAnswers,
+      [currentQuestion.id]: optionId,
     });
   };
   
   const handleNext = () => {
-    console.log("Handle next clicked. Current question index:", currentQuestionIndex);
-    console.log("Total questions:", questions.length);
-    console.log("Is last question?", currentQuestionIndex >= questions.length - 1);
-    
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      console.log("Attempting to submit questionnaire...");
+      // Calculate total score
+      const totalScore = Object.keys(answers).reduce((total, questionId) => {
+        const question = questions.find(q => q.id === parseInt(questionId));
+        if (!question) return total;
+        
+        const selectedOption = question.options.find(opt => opt.id === answers[parseInt(questionId)]);
+        return total + (selectedOption?.value || 0);
+      }, 0);
       
-      // Prepare response data - save answers as key-value pairs
+      setScore(totalScore);
+      
+      // Prepare response data
       const responseData = {
         questionnaireId: questionnaire.id,
-        responses: answers, // Save all answers directly
+        responses: Object.keys(answers).map(questionId => {
+          const qId = parseInt(questionId);
+          const aId = answers[qId];
+          const question = questions.find(q => q.id === qId);
+          const option = question?.options.find(o => o.id === aId);
+          
+          return {
+            questionId: qId,
+            answerId: aId,
+            value: option?.value || 0,
+          };
+        }),
+        score: totalScore,
       };
       
-      console.log("Submitting questionnaire response:", responseData);
-      console.log("Current answers:", answers);
-      console.log("Mutation function:", submitMutation.mutate);
-      
       // Submit response
-      try {
-        submitMutation.mutate(responseData);
-        console.log("Mutation triggered successfully");
-      } catch (error) {
-        console.error("Error triggering mutation:", error);
-      }
+      submitMutation.mutate(responseData);
     }
   };
   
@@ -188,34 +146,21 @@ export default function QuestionnairePage() {
     return (
       <MobileLayout>
         <div className="p-4">
-          <Card className="text-center bg-green-50 border-green-200">
+          <Card className="text-center">
             <CardHeader>
-              <CardTitle className="flex items-center justify-center gap-2 text-green-700">
-                <CheckCircle className="h-8 w-8 text-green-500" />
-                Thank You!
+              <CardTitle className="flex items-center justify-center gap-2">
+                <CheckCircle className="h-6 w-6 text-green-500" />
+                Assessment Completed
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <h2 className="text-xl font-semibold mb-4 text-green-800">
-                Your questionnaire has been completed successfully
-              </h2>
-              <p className="mb-4 text-gray-700">
-                Thank you for taking the time to complete the {questionnaire.title}.
-              </p>
+              <p className="mb-4">Thank you for completing the {questionnaire.title}.</p>
               <p className="text-muted-foreground mb-6">
-                Your detailed information has been saved securely and will be available to your mental health professional during your appointments. This helps them provide personalized care tailored to your specific needs and preferences.
+                Your responses have been recorded and may be useful for your consultation with mental health professionals.
               </p>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <p className="text-blue-800 text-sm">
-                  <strong>What happens next?</strong><br />
-                  Your responses are now part of your profile and can be reviewed by experts during consultations to better understand your background, preferences, and therapeutic goals.
-                </p>
-              </div>
             </CardContent>
             <CardFooter className="flex justify-center">
-              <Button onClick={() => navigate("/")} className="bg-green-600 hover:bg-green-700">
-                Return Home
-              </Button>
+              <Button onClick={() => navigate("/")}>Return Home</Button>
             </CardFooter>
           </Card>
         </div>
@@ -242,69 +187,24 @@ export default function QuestionnairePage() {
             <CardTitle className="text-lg">{currentQuestion.text}</CardTitle>
           </CardHeader>
           <CardContent>
-            {/* Text Input */}
-            {currentQuestion.type === 'text' && (
-              <Input
-                type="text"
-                placeholder="Enter your answer..."
-                value={answers[currentQuestion.id] || ''}
-                onChange={(e) => handleAnswer(e.target.value)}
-                className="w-full"
-              />
-            )}
-
-            {/* Number Input */}
-            {currentQuestion.type === 'number' && (
-              <Input
-                type="number"
-                placeholder="Enter your age..."
-                min={currentQuestion.min}
-                max={currentQuestion.max}
-                value={answers[currentQuestion.id] || ''}
-                onChange={(e) => handleAnswer(parseInt(e.target.value) || '')}
-                className="w-full"
-              />
-            )}
-
-            {/* Checkbox (Multiple Selection) */}
-            {currentQuestion.type === 'checkbox' && currentQuestion.options && (
-              <div className="space-y-3">
-                {currentQuestion.options.map((option) => (
-                  <div key={option.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`checkbox-${option.id}`}
-                      checked={(answers[currentQuestion.id] || []).includes(option.id)}
-                      onCheckedChange={(checked) => handleCheckboxChange(option.id, checked as boolean)}
-                    />
-                    <Label htmlFor={`checkbox-${option.id}`} className="cursor-pointer">
-                      {option.text}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Radio Group (Single Selection) */}
-            {(currentQuestion.type === 'radio' || !currentQuestion.type) && currentQuestion.options && (
-              <RadioGroup
-                value={answers[currentQuestion.id]?.toString()}
-                onValueChange={(value) => {
-                  const option = currentQuestion.options!.find(o => o.id === parseInt(value));
-                  if (option) {
-                    handleAnswer(option.id);
-                  }
-                }}
-              >
-                {currentQuestion.options.map((option) => (
-                  <div key={option.id} className="flex items-center space-x-2 mb-3 last:mb-0">
-                    <RadioGroupItem value={option.id.toString()} id={`option-${option.id}`} />
-                    <Label htmlFor={`option-${option.id}`} className="cursor-pointer">
-                      {option.text}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            )}
+            <RadioGroup
+              value={answers[currentQuestion.id]?.toString()}
+              onValueChange={(value) => {
+                const option = currentQuestion.options.find(o => o.id === parseInt(value));
+                if (option) {
+                  handleAnswer(option.id, option.value);
+                }
+              }}
+            >
+              {currentQuestion.options.map((option) => (
+                <div key={option.id} className="flex items-center space-x-2 mb-3 last:mb-0">
+                  <RadioGroupItem value={option.id.toString()} id={`option-${option.id}`} />
+                  <Label htmlFor={`option-${option.id}`} className="cursor-pointer">
+                    {option.text}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
           </CardContent>
           <CardFooter className="flex justify-between">
             <Button
@@ -314,41 +214,16 @@ export default function QuestionnairePage() {
             >
               <ChevronLeft className="h-4 w-4 mr-1" /> Previous
             </Button>
-            <div className="space-x-2">
-              <Button
-                onClick={() => {
-                  alert(`Button clicked! Question ${currentQuestionIndex + 1} of ${questions.length}`);
-                  console.log("Button clicked!");
-                  handleNext();
-                }}
-                disabled={submitMutation.isPending}
-              >
-                {submitMutation.isPending ? (
-                  'Submitting...'
-                ) : currentQuestionIndex < questions.length - 1 ? (
-                  <>Next <ChevronRight className="h-4 w-4 ml-1" /></>
-                ) : (
-                  'Complete'
-                )}
-              </Button>
-              {/* Debug submit button - always visible */}
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  alert("Direct submit clicked!");
-                  console.log("Direct submit clicked!");
-                  const responseData = {
-                    questionnaireId: questionnaire.id,
-                    responses: answers,
-                  };
-                  console.log("Direct submit data:", responseData);
-                  submitMutation.mutate(responseData);
-                }}
-                disabled={submitMutation.isPending}
-              >
-                Submit Now
-              </Button>
-            </div>
+            <Button
+              onClick={handleNext}
+              disabled={!answers[currentQuestion.id] || submitMutation.isPending}
+            >
+              {currentQuestionIndex < questions.length - 1 ? (
+                <>Next <ChevronRight className="h-4 w-4 ml-1" /></>
+              ) : (
+                'Complete'
+              )}
+            </Button>
           </CardFooter>
         </Card>
       </div>

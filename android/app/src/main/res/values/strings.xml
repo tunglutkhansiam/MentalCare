@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">MentalCare</string>
-    <string name="title_activity_main">MentalCare</string>
-    <string name="package_name">com.mentalcare.app</string>
-    <string name="custom_url_scheme">com.mentalcare.app</string>
-</resources>

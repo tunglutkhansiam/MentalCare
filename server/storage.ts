@@ -1,6 +1,6 @@
 import { User, InsertUser, Expert, InsertExpert, Specialization, InsertSpecialization, Appointment, InsertAppointment, Message, InsertMessage, Category, InsertCategory } from "@shared/schema";
 import { db } from "./db";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, sql, or, gt } from "drizzle-orm";
 import { users, experts, specializations, appointments, messages, categories } from "@shared/schema";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
@@ -36,6 +36,7 @@ export interface IStorage {
   getUpcomingAppointments(userId: number): Promise<(Appointment & { expert: Expert })[]>;
   getPastAppointments(userId: number): Promise<(Appointment & { expert: Expert })[]>;
   getNextUpcomingAppointment(userId: number): Promise<(Appointment & { expert: Expert }) | undefined>;
+  getAllUpcomingAppointments(): Promise<Appointment[]>;
   createAppointment(appointment: InsertAppointment): Promise<Appointment>;
   updateAppointmentStatus(id: number, status: string): Promise<Appointment>;
   
@@ -394,6 +395,29 @@ export class DatabaseStorage implements IStorage {
           .where(eq(appointments.id, appointment.id));
       }
     }
+  }
+
+  async getAllUpcomingAppointments(): Promise<Appointment[]> {
+    const now = new Date();
+    const currentDate = now.toISOString().split('T')[0];
+    const currentTime = now.toTimeString().split(' ')[0].substring(0, 5);
+
+    return await db
+      .select()
+      .from(appointments)
+      .where(
+        and(
+          eq(appointments.status, "upcoming"),
+          or(
+            gt(appointments.date, currentDate),
+            and(
+              eq(appointments.date, currentDate),
+              gt(appointments.time, currentTime)
+            )
+          )
+        )
+      )
+      .orderBy(appointments.date, appointments.time);
   }
   
   async getMessagesByUserAndExpert(userId: number, expertId: number): Promise<Message[]> {

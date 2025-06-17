@@ -81,20 +81,24 @@ export default function QuestionnairePage() {
   const questions = questionnaire.questions as Array<{
     id: number;
     text: string;
-    options: Array<{
+    type: string;
+    required?: boolean;
+    options?: Array<{
       id: number;
       text: string;
       value: number;
     }>;
+    min?: number;
+    max?: number;
   }>;
   
   const currentQuestion = questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
   
-  const handleAnswer = (optionId: number, value: number) => {
+  const handleAnswer = (value: any) => {
     setAnswers({
       ...answers,
-      [currentQuestion.id]: optionId,
+      [currentQuestion.id]: value,
     });
   };
   
@@ -187,24 +191,74 @@ export default function QuestionnairePage() {
             <CardTitle className="text-lg">{currentQuestion.text}</CardTitle>
           </CardHeader>
           <CardContent>
-            <RadioGroup
-              value={answers[currentQuestion.id]?.toString()}
-              onValueChange={(value) => {
-                const option = currentQuestion.options.find(o => o.id === parseInt(value));
-                if (option) {
-                  handleAnswer(option.id, option.value);
-                }
-              }}
-            >
-              {currentQuestion.options.map((option) => (
-                <div key={option.id} className="flex items-center space-x-2 mb-3 last:mb-0">
-                  <RadioGroupItem value={option.id.toString()} id={`option-${option.id}`} />
-                  <Label htmlFor={`option-${option.id}`} className="cursor-pointer">
-                    {option.text}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
+            {currentQuestion.type === 'text' && (
+              <input
+                type="text"
+                value={answers[currentQuestion.id] || ''}
+                onChange={(e) => handleAnswer(e.target.value)}
+                className="w-full p-3 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                placeholder="Enter your answer..."
+              />
+            )}
+            
+            {currentQuestion.type === 'number' && (
+              <input
+                type="number"
+                min={currentQuestion.min}
+                max={currentQuestion.max}
+                value={answers[currentQuestion.id] || ''}
+                onChange={(e) => handleAnswer(parseInt(e.target.value) || 0)}
+                className="w-full p-3 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                placeholder="Enter a number..."
+              />
+            )}
+            
+            {currentQuestion.type === 'radio' && currentQuestion.options && (
+              <RadioGroup
+                value={answers[currentQuestion.id]?.toString()}
+                onValueChange={(value) => {
+                  const option = currentQuestion.options!.find(o => o.id === parseInt(value));
+                  if (option) {
+                    handleAnswer(option.id);
+                  }
+                }}
+              >
+                {currentQuestion.options.map((option) => (
+                  <div key={option.id} className="flex items-center space-x-2 mb-3 last:mb-0">
+                    <RadioGroupItem value={option.id.toString()} id={`option-${option.id}`} />
+                    <Label htmlFor={`option-${option.id}`} className="cursor-pointer">
+                      {option.text}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            )}
+            
+            {currentQuestion.type === 'checkbox' && currentQuestion.options && (
+              <div className="space-y-3">
+                {currentQuestion.options.map((option) => (
+                  <div key={option.id} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id={`checkbox-${option.id}`}
+                      checked={(answers[currentQuestion.id] as number[] || []).includes(option.id)}
+                      onChange={(e) => {
+                        const currentAnswers = answers[currentQuestion.id] as number[] || [];
+                        if (e.target.checked) {
+                          handleAnswer([...currentAnswers, option.id]);
+                        } else {
+                          handleAnswer(currentAnswers.filter(id => id !== option.id));
+                        }
+                      }}
+                      className="h-4 w-4 text-primary focus:ring-ring border-gray-300 rounded"
+                    />
+                    <Label htmlFor={`checkbox-${option.id}`} className="cursor-pointer">
+                      {option.text}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
           <CardFooter className="flex justify-between">
             <Button

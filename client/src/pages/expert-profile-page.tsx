@@ -168,10 +168,6 @@ export default function ExpertProfilePage() {
                 <span>Languages:</span>
                 <span className="font-medium">English, Hindi, Paite</span>
               </div>
-              <div className="flex justify-between">
-                <span>Available:</span>
-                <span className="font-medium">Mon-Sat, 9 AM - 6 PM</span>
-              </div>
             </div>
           </CardContent>
         </Card>

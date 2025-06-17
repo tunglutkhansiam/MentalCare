@@ -35,16 +35,16 @@ class AppointmentScheduler {
   private async checkAndSendReminders() {
     try {
       const now = new Date();
-      const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
-      const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+      const fiftyFiveMinutesFromNow = new Date(now.getTime() + 55 * 60 * 1000);
+      const sixtyFiveMinutesFromNow = new Date(now.getTime() + 65 * 60 * 1000);
 
       console.log(`[Reminder Check] Current time: ${now.toISOString()}`);
-      console.log(`[Reminder Check] Looking for appointments between ${oneHourFromNow.toISOString()} and ${twoHoursFromNow.toISOString()}`);
+      console.log(`[Reminder Check] Looking for appointments between ${fiftyFiveMinutesFromNow.toISOString()} and ${sixtyFiveMinutesFromNow.toISOString()}`);
 
       // Get all upcoming appointments that need reminders
       const upcomingAppointments = await this.getUpcomingAppointmentsForReminders(
-        oneHourFromNow,
-        twoHoursFromNow
+        fiftyFiveMinutesFromNow,
+        sixtyFiveMinutesFromNow
       );
 
       console.log(`[Reminder Check] Found ${upcomingAppointments.length} appointments in reminder window`);

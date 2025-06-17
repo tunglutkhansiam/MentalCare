@@ -1,4 +1,4 @@
-const { sendSMS, formatAppointmentReminderSMS } = require('./server/sms.js');
+import { sendSMS, formatAppointmentReminderSMS } from './server/sms.ts';
 
 async function testSMS() {
   console.log('Testing SMS functionality...');

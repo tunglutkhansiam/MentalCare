@@ -7,6 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
@@ -25,7 +27,7 @@ export default function QuestionnairePage() {
   
   // State for tracking current question and answers
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, number>>({});
+  const [answers, setAnswers] = useState<Record<number, any>>({});
   const [completed, setCompleted] = useState(false);
   const [score, setScore] = useState<number | null>(null);
   
@@ -81,7 +83,11 @@ export default function QuestionnairePage() {
   const questions = questionnaire.questions as Array<{
     id: number;
     text: string;
-    options: Array<{
+    type?: string;
+    required?: boolean;
+    min?: number;
+    max?: number;
+    options?: Array<{
       id: number;
       text: string;
       value: number;

@@ -111,6 +111,11 @@ export default function QuestionnairePage() {
   const currentQuestion = questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
   
+  console.log("Current question index:", currentQuestionIndex);
+  console.log("Total questions:", questions.length);
+  console.log("Current question:", currentQuestion?.text);
+  console.log("Is last question:", currentQuestionIndex === questions.length - 1);
+  
   const handleAnswer = (value: any) => {
     setAnswers({
       ...answers,
@@ -300,18 +305,39 @@ export default function QuestionnairePage() {
             >
               <ChevronLeft className="h-4 w-4 mr-1" /> Previous
             </Button>
-            <Button
-              onClick={handleNext}
-              disabled={submitMutation.isPending}
-            >
-              {submitMutation.isPending ? (
-                'Submitting...'
-              ) : currentQuestionIndex < questions.length - 1 ? (
-                <>Next <ChevronRight className="h-4 w-4 ml-1" /></>
-              ) : (
-                'Complete'
-              )}
-            </Button>
+            <div className="space-x-2">
+              <Button
+                onClick={() => {
+                  console.log("Button clicked!");
+                  handleNext();
+                }}
+                disabled={submitMutation.isPending}
+              >
+                {submitMutation.isPending ? (
+                  'Submitting...'
+                ) : currentQuestionIndex < questions.length - 1 ? (
+                  <>Next <ChevronRight className="h-4 w-4 ml-1" /></>
+                ) : (
+                  'Complete'
+                )}
+              </Button>
+              {/* Debug submit button - always visible */}
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  console.log("Direct submit clicked!");
+                  const responseData = {
+                    questionnaireId: questionnaire.id,
+                    responses: answers,
+                  };
+                  console.log("Direct submit data:", responseData);
+                  submitMutation.mutate(responseData);
+                }}
+                disabled={submitMutation.isPending}
+              >
+                Submit Now
+              </Button>
+            </div>
           </CardFooter>
         </Card>
       </div>

@@ -41,17 +41,17 @@ export default function QuestionnairePage() {
   const submitMutation = useMutation({
     mutationFn: async (responseData: {
       questionnaireId: number;
-      responses: { questionId: number; answerId: number; value: number }[];
-      score: number;
+      responses: Record<number, any>;
     }) => {
       const res = await apiRequest("POST", "/api/questionnaire-responses", responseData);
       return await res.json();
     },
     onSuccess: () => {
       setCompleted(true);
+      // Show thank you popup
       toast({
-        title: "Assessment completed",
-        description: "Your responses have been recorded.",
+        title: "Thank you for completing the questionnaire!",
+        description: "Your information has been saved and will be available to your mental health professional during appointments.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/user/questionnaire-responses"] });
     },
@@ -124,33 +124,10 @@ export default function QuestionnairePage() {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      // Calculate total score
-      const totalScore = Object.keys(answers).reduce((total, questionId) => {
-        const question = questions.find(q => q.id === parseInt(questionId));
-        if (!question || !question.options) return total;
-        
-        const selectedOption = question.options.find(opt => opt.id === answers[parseInt(questionId)]);
-        return total + (selectedOption?.value || 0);
-      }, 0);
-      
-      setScore(totalScore);
-      
-      // Prepare response data
+      // Prepare response data - save answers as key-value pairs
       const responseData = {
         questionnaireId: questionnaire.id,
-        responses: Object.keys(answers).map(questionId => {
-          const qId = parseInt(questionId);
-          const aId = answers[qId];
-          const question = questions.find(q => q.id === qId);
-          const option = question?.options.find(o => o.id === aId);
-          
-          return {
-            questionId: qId,
-            answerId: aId,
-            value: option?.value || 0,
-          };
-        }),
-        score: totalScore,
+        responses: answers, // Save all answers directly
       };
       
       // Submit response
@@ -168,21 +145,34 @@ export default function QuestionnairePage() {
     return (
       <MobileLayout>
         <div className="p-4">
-          <Card className="text-center">
+          <Card className="text-center bg-green-50 border-green-200">
             <CardHeader>
-              <CardTitle className="flex items-center justify-center gap-2">
-                <CheckCircle className="h-6 w-6 text-green-500" />
-                Assessment Completed
+              <CardTitle className="flex items-center justify-center gap-2 text-green-700">
+                <CheckCircle className="h-8 w-8 text-green-500" />
+                Thank You!
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="mb-4">Thank you for completing the {questionnaire.title}.</p>
-              <p className="text-muted-foreground mb-6">
-                Your responses have been recorded and may be useful for your consultation with mental health professionals.
+              <h2 className="text-xl font-semibold mb-4 text-green-800">
+                Your questionnaire has been completed successfully
+              </h2>
+              <p className="mb-4 text-gray-700">
+                Thank you for taking the time to complete the {questionnaire.title}.
               </p>
+              <p className="text-muted-foreground mb-6">
+                Your detailed information has been saved securely and will be available to your mental health professional during your appointments. This helps them provide personalized care tailored to your specific needs and preferences.
+              </p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <p className="text-blue-800 text-sm">
+                  <strong>What happens next?</strong><br />
+                  Your responses are now part of your profile and can be reviewed by experts during consultations to better understand your background, preferences, and therapeutic goals.
+                </p>
+              </div>
             </CardContent>
             <CardFooter className="flex justify-center">
-              <Button onClick={() => navigate("/")}>Return Home</Button>
+              <Button onClick={() => navigate("/")} className="bg-green-600 hover:bg-green-700">
+                Return Home
+              </Button>
             </CardFooter>
           </Card>
         </div>

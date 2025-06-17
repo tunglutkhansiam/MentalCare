@@ -170,20 +170,13 @@ export const questionnaireResponses = pgTable("questionnaire_responses", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
   questionnaireId: integer("questionnaire_id").notNull().references(() => questionnaires.id),
-  responses: json("responses").notNull().$type<Array<{
-    questionId: number;
-    answerId: number;
-    value: number;
-  }>>(),
-  score: integer("score"),
+  responses: json("responses").notNull().$type<Record<number, any>>(),
   completedAt: timestamp("completed_at").defaultNow(),
 });
 
-export const insertQuestionnaireResponseSchema = createInsertSchema(questionnaireResponses).pick({
-  userId: true,
-  questionnaireId: true,
-  responses: true,
-  score: true,
+export const insertQuestionnaireResponseSchema = createInsertSchema(questionnaireResponses).omit({
+  id: true,
+  completedAt: true,
 });
 
 export type InsertQuestionnaire = z.infer<typeof insertQuestionnaireSchema>;

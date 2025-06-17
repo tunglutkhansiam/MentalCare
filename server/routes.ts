@@ -4,6 +4,8 @@ import { WebSocketServer } from "ws";
 import WebSocket from "ws";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
+import { sendSMS, formatAppointmentConfirmationSMS, formatExpertNotificationSMS } from "./sms";
+import { appointmentScheduler } from "./scheduler";
 import { z } from "zod";
 import { insertAppointmentSchema, insertMessageSchema, questionnaires, questionnaireResponses, messages } from "@shared/schema";
 import { db } from "./db";
@@ -616,6 +618,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (err) {
       console.error("Error fetching expert chats:", err);
       res.status(500).json({ message: "Failed to fetch chat threads" });
+    }
+  });
+
+  // Test endpoint for appointment reminders
+  app.post("/api/test-reminders", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      console.log("Manually triggering reminder check...");
+      await appointmentScheduler.triggerReminderCheck();
+      res.json({ message: "Reminder check triggered successfully" });
+    } catch (err) {
+      console.error("Error triggering reminder check:", err);
+      res.status(500).json({ message: "Failed to trigger reminder check" });
     }
   });
 

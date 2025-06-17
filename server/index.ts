@@ -67,5 +67,9 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    
+    // Start the appointment reminder scheduler
+    appointmentScheduler.start();
+    log("Appointment reminder scheduler started");
   });
 })();

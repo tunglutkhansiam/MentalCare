@@ -25,7 +25,7 @@ export default function QuestionnairePage() {
   
   // State for tracking current question and answers
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, number>>({});
+  const [answers, setAnswers] = useState<Record<number, string | number | number[]>>({});
   const [completed, setCompleted] = useState(false);
   const [score, setScore] = useState<number | null>(null);
   
@@ -106,13 +106,28 @@ export default function QuestionnairePage() {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      // Calculate total score
+      // Calculate total score based on question types
       const totalScore = Object.keys(answers).reduce((total, questionId) => {
         const question = questions.find(q => q.id === parseInt(questionId));
         if (!question) return total;
         
-        const selectedOption = question.options.find(opt => opt.id === answers[parseInt(questionId)]);
-        return total + (selectedOption?.value || 0);
+        if (question.type === 'radio' && question.options) {
+          const answer = answers[parseInt(questionId)];
+          const selectedOption = question.options.find(opt => opt.id === (typeof answer === 'number' ? answer : 0));
+          return total + (selectedOption?.value || 0);
+        } else if (question.type === 'checkbox' && question.options) {
+          const answer = answers[parseInt(questionId)];
+          const selectedIds = Array.isArray(answer) ? answer : [];
+          const checkboxScore = selectedIds.reduce((sum, id) => {
+            const option = question.options?.find(opt => opt.id === id);
+            return sum + (option?.value || 0);
+          }, 0);
+          return total + checkboxScore;
+        } else if (question.type === 'number') {
+          const answer = answers[parseInt(questionId)];
+          return total + (typeof answer === 'string' || typeof answer === 'number' ? parseInt(answer.toString()) || 0 : 0);
+        }
+        return total;
       }, 0);
       
       setScore(totalScore);
@@ -122,14 +137,35 @@ export default function QuestionnairePage() {
         questionnaireId: questionnaire.id,
         responses: Object.keys(answers).map(questionId => {
           const qId = parseInt(questionId);
-          const aId = answers[qId];
+          const answer = answers[qId];
           const question = questions.find(q => q.id === qId);
-          const option = question?.options.find(o => o.id === aId);
+          
+          let value = 0;
+          let answerId = 0;
+          
+          if (question?.type === 'radio' && question.options) {
+            answerId = typeof answer === 'number' ? answer : 0;
+            const option = question.options.find(o => o.id === answerId);
+            value = option?.value || 0;
+          } else if (question?.type === 'checkbox' && question.options) {
+            const selectedIds = Array.isArray(answer) ? answer : [];
+            answerId = selectedIds.length > 0 ? selectedIds[0] : 0; // Use first selected for compatibility
+            value = selectedIds.reduce((sum, id) => {
+              const option = question.options?.find(opt => opt.id === id);
+              return sum + (option?.value || 0);
+            }, 0);
+          } else if (question?.type === 'number') {
+            answerId = typeof answer === 'string' || typeof answer === 'number' ? parseInt(answer.toString()) || 0 : 0;
+            value = answerId;
+          } else if (question?.type === 'text') {
+            answerId = 0; // Text responses don't have numeric IDs
+            value = 0; // Text responses don't contribute to score
+          }
           
           return {
             questionId: qId,
-            answerId: aId,
-            value: option?.value || 0,
+            answerId: answerId,
+            value: value,
           };
         }),
         score: totalScore,
@@ -194,7 +230,10 @@ export default function QuestionnairePage() {
             {currentQuestion.type === 'text' && (
               <input
                 type="text"
-                value={answers[currentQuestion.id] || ''}
+                value={(() => {
+                  const answer = answers[currentQuestion.id];
+                  return typeof answer === 'string' ? answer : '';
+                })()}
                 onChange={(e) => handleAnswer(e.target.value)}
                 className="w-full p-3 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Enter your answer..."
@@ -206,7 +245,10 @@ export default function QuestionnairePage() {
                 type="number"
                 min={currentQuestion.min}
                 max={currentQuestion.max}
-                value={answers[currentQuestion.id] || ''}
+                value={(() => {
+                  const answer = answers[currentQuestion.id];
+                  return typeof answer === 'number' ? answer : '';
+                })()}
                 onChange={(e) => handleAnswer(parseInt(e.target.value) || 0)}
                 className="w-full p-3 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Enter a number..."
@@ -270,7 +312,12 @@ export default function QuestionnairePage() {
             </Button>
             <Button
               onClick={handleNext}
-              disabled={!answers[currentQuestion.id] || submitMutation.isPending}
+              disabled={
+                (currentQuestion.required && !answers[currentQuestion.id]) ||
+                (currentQuestion.type === 'checkbox' && currentQuestion.required && 
+                 (!answers[currentQuestion.id] || !Array.isArray(answers[currentQuestion.id]) || (answers[currentQuestion.id] as number[]).length === 0)) ||
+                submitMutation.isPending
+              }
             >
               {currentQuestionIndex < questions.length - 1 ? (
                 <>Next <ChevronRight className="h-4 w-4 ml-1" /></>

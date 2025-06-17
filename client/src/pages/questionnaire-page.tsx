@@ -43,10 +43,23 @@ export default function QuestionnairePage() {
       questionnaireId: number;
       responses: Record<number, any>;
     }) => {
-      const res = await apiRequest("POST", "/api/questionnaire-responses", responseData);
-      return await res.json();
+      console.log("Starting API request with data:", responseData);
+      try {
+        const res = await apiRequest("POST", "/api/questionnaire-responses", responseData);
+        console.log("API response status:", res.status);
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        const result = await res.json();
+        console.log("API response data:", result);
+        return result;
+      } catch (error) {
+        console.error("API request failed:", error);
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Questionnaire submitted successfully:", data);
       setCompleted(true);
       // Show thank you popup
       toast({
@@ -59,7 +72,7 @@ export default function QuestionnairePage() {
       console.error("Questionnaire submission error:", error);
       toast({
         title: "Submission failed",
-        description: error.message,
+        description: error.message || "An unexpected error occurred",
         variant: "destructive",
       });
     },
@@ -122,9 +135,15 @@ export default function QuestionnairePage() {
   };
   
   const handleNext = () => {
+    console.log("Handle next clicked. Current question index:", currentQuestionIndex);
+    console.log("Total questions:", questions.length);
+    console.log("Is last question?", currentQuestionIndex >= questions.length - 1);
+    
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
+      console.log("Attempting to submit questionnaire...");
+      
       // Prepare response data - save answers as key-value pairs
       const responseData = {
         questionnaireId: questionnaire.id,
@@ -133,9 +152,15 @@ export default function QuestionnairePage() {
       
       console.log("Submitting questionnaire response:", responseData);
       console.log("Current answers:", answers);
+      console.log("Mutation function:", submitMutation.mutate);
       
       // Submit response
-      submitMutation.mutate(responseData);
+      try {
+        submitMutation.mutate(responseData);
+        console.log("Mutation triggered successfully");
+      } catch (error) {
+        console.error("Error triggering mutation:", error);
+      }
     }
   };
   

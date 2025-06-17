@@ -4,8 +4,9 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import MobileLayout from "@/components/layouts/mobile-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Expert, Category, Appointment, Message, User } from "@shared/schema";
+import { Expert, Category, Appointment, Questionnaire, Message, User } from "@shared/schema";
 import AppointmentCard from "@/components/ui/appointment-card";
+import QuestionnaireCard from "@/components/ui/questionnaire-card";
 import { Briefcase, Calendar, ClipboardList, MessageCircle, User as UserIcon, Users, LogOut } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,10 @@ export default function HomePage() {
   const { user, expert, isExpert, logoutMutation } = useAuth();
   
   // Fetch user-related data
+  const { data: questionnaires, isLoading: loadingQuestionnaires } = useQuery<Pick<Questionnaire, "id" | "title" | "description">[]>({
+    queryKey: ["/api/questionnaires"],
+    enabled: !isExpert, // Only fetch if not an expert
+  });
   
   const { data: upcomingAppointments, isLoading: loadingAppointment } = useQuery<(Appointment & { expert: Expert })[]>({
     queryKey: ["/api/appointments/upcoming/all", user?.id],
@@ -78,7 +83,7 @@ export default function HomePage() {
   // Show different content for experts and users
   // Check if page is loading
   const isLoading = (isExpert && (loadingExpertAppointments || loadingChats)) || 
-                   (!isExpert && loadingAppointment);
+                   (!isExpert && (loadingQuestionnaires || loadingAppointment));
 
   // Show skeleton while loading
   if (isLoading) {
@@ -302,7 +307,26 @@ export default function HomePage() {
               )}
             </div>
 
-
+            {/* Questionnaires Section - Only shown to regular users */}
+            {!isExpert && (
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold mb-3">Complete Your Questionnaires</h2>
+                
+                <div className="space-y-4">
+                  {questionnaires?.length ? (
+                    questionnaires.map(questionnaire => (
+                      <QuestionnaireCard key={questionnaire.id} questionnaire={questionnaire} />
+                    ))
+                  ) : (
+                    <Card>
+                      <CardContent className="p-4 text-center py-8">
+                        <p className="text-muted-foreground">No questionnaires available</p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </div>
+            )}
           </>
         )}
         </div>

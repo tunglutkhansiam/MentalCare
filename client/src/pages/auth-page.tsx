@@ -181,13 +181,16 @@ export default function AuthPage() {
                       </Button>
                     </div>
 
-                    <Button 
-                      type="submit"
-                      className="mobile-button w-full bg-primary hover:bg-primary/90 text-white tap-highlight-none" 
-                      disabled={loginMutation.isPending}
-                    >
-                      {loginMutation.isPending ? "Logging in..." : "Log in"}
-                    </Button>
+                    <div className="flex justify-center">
+                      <Button 
+                        type="submit"
+                        size="sm"
+                        className="px-8 py-2 bg-primary hover:bg-primary/90 text-white tap-highlight-none" 
+                        disabled={loginMutation.isPending}
+                      >
+                        {loginMutation.isPending ? "Logging in..." : "Log in"}
+                      </Button>
+                    </div>
                   </form>
                 </Form>
               </CardContent>

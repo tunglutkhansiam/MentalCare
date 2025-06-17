@@ -590,10 +590,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
+      console.log("Received questionnaire response:", req.body);
+      
       const responseData = insertQuestionnaireResponseSchema.parse({
         ...req.body,
         userId: req.user.id
       });
+      
+      console.log("Parsed response data:", responseData);
       
       // Check if user already has a response for this questionnaire
       const existingResponse = await storage.getQuestionnaireResponseByUser(
@@ -603,19 +607,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       let response;
       if (existingResponse) {
+        console.log("Updating existing response:", existingResponse.id);
         // Update existing response
         response = await storage.updateQuestionnaireResponse(existingResponse.id, {
           responses: responseData.responses,
           completedAt: new Date()
         });
       } else {
+        console.log("Creating new response");
         // Create new response
         response = await storage.createQuestionnaireResponse(responseData);
       }
       
+      console.log("Response saved successfully:", response.id);
       res.status(201).json(response);
     } catch (err) {
       if (err instanceof z.ZodError) {
+        console.error("Validation error:", err.errors);
         return res.status(400).json({ message: err.errors });
       }
       console.error("Error saving questionnaire response:", err);

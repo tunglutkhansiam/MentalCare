@@ -56,6 +56,7 @@ export default function QuestionnairePage() {
       queryClient.invalidateQueries({ queryKey: ["/api/user/questionnaire-responses"] });
     },
     onError: (error) => {
+      console.error("Questionnaire submission error:", error);
       toast({
         title: "Submission failed",
         description: error.message,
@@ -129,6 +130,9 @@ export default function QuestionnairePage() {
         questionnaireId: questionnaire.id,
         responses: answers, // Save all answers directly
       };
+      
+      console.log("Submitting questionnaire response:", responseData);
+      console.log("Current answers:", answers);
       
       // Submit response
       submitMutation.mutate(responseData);
@@ -273,9 +277,11 @@ export default function QuestionnairePage() {
             </Button>
             <Button
               onClick={handleNext}
-              disabled={!answers[currentQuestion.id] || submitMutation.isPending}
+              disabled={submitMutation.isPending}
             >
-              {currentQuestionIndex < questions.length - 1 ? (
+              {submitMutation.isPending ? (
+                'Submitting...'
+              ) : currentQuestionIndex < questions.length - 1 ? (
                 <>Next <ChevronRight className="h-4 w-4 ml-1" /></>
               ) : (
                 'Complete'

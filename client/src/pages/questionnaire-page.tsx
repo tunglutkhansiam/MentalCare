@@ -97,10 +97,26 @@ export default function QuestionnairePage() {
   const currentQuestion = questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
   
-  const handleAnswer = (optionId: number, value: number) => {
+  const handleAnswer = (value: any) => {
     setAnswers({
       ...answers,
-      [currentQuestion.id]: optionId,
+      [currentQuestion.id]: value,
+    });
+  };
+
+  const handleCheckboxChange = (optionId: number, checked: boolean) => {
+    const currentAnswers = answers[currentQuestion.id] || [];
+    let newAnswers;
+    
+    if (checked) {
+      newAnswers = [...currentAnswers, optionId];
+    } else {
+      newAnswers = currentAnswers.filter((id: number) => id !== optionId);
+    }
+    
+    setAnswers({
+      ...answers,
+      [currentQuestion.id]: newAnswers,
     });
   };
   
@@ -111,7 +127,7 @@ export default function QuestionnairePage() {
       // Calculate total score
       const totalScore = Object.keys(answers).reduce((total, questionId) => {
         const question = questions.find(q => q.id === parseInt(questionId));
-        if (!question) return total;
+        if (!question || !question.options) return total;
         
         const selectedOption = question.options.find(opt => opt.id === answers[parseInt(questionId)]);
         return total + (selectedOption?.value || 0);
@@ -193,24 +209,69 @@ export default function QuestionnairePage() {
             <CardTitle className="text-lg">{currentQuestion.text}</CardTitle>
           </CardHeader>
           <CardContent>
-            <RadioGroup
-              value={answers[currentQuestion.id]?.toString()}
-              onValueChange={(value) => {
-                const option = currentQuestion.options.find(o => o.id === parseInt(value));
-                if (option) {
-                  handleAnswer(option.id, option.value);
-                }
-              }}
-            >
-              {currentQuestion.options.map((option) => (
-                <div key={option.id} className="flex items-center space-x-2 mb-3 last:mb-0">
-                  <RadioGroupItem value={option.id.toString()} id={`option-${option.id}`} />
-                  <Label htmlFor={`option-${option.id}`} className="cursor-pointer">
-                    {option.text}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
+            {/* Text Input */}
+            {currentQuestion.type === 'text' && (
+              <Input
+                type="text"
+                placeholder="Enter your answer..."
+                value={answers[currentQuestion.id] || ''}
+                onChange={(e) => handleAnswer(e.target.value)}
+                className="w-full"
+              />
+            )}
+
+            {/* Number Input */}
+            {currentQuestion.type === 'number' && (
+              <Input
+                type="number"
+                placeholder="Enter your age..."
+                min={currentQuestion.min}
+                max={currentQuestion.max}
+                value={answers[currentQuestion.id] || ''}
+                onChange={(e) => handleAnswer(parseInt(e.target.value) || '')}
+                className="w-full"
+              />
+            )}
+
+            {/* Checkbox (Multiple Selection) */}
+            {currentQuestion.type === 'checkbox' && currentQuestion.options && (
+              <div className="space-y-3">
+                {currentQuestion.options.map((option) => (
+                  <div key={option.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`checkbox-${option.id}`}
+                      checked={(answers[currentQuestion.id] || []).includes(option.id)}
+                      onCheckedChange={(checked) => handleCheckboxChange(option.id, checked as boolean)}
+                    />
+                    <Label htmlFor={`checkbox-${option.id}`} className="cursor-pointer">
+                      {option.text}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Radio Group (Single Selection) */}
+            {(currentQuestion.type === 'radio' || !currentQuestion.type) && currentQuestion.options && (
+              <RadioGroup
+                value={answers[currentQuestion.id]?.toString()}
+                onValueChange={(value) => {
+                  const option = currentQuestion.options!.find(o => o.id === parseInt(value));
+                  if (option) {
+                    handleAnswer(option.id);
+                  }
+                }}
+              >
+                {currentQuestion.options.map((option) => (
+                  <div key={option.id} className="flex items-center space-x-2 mb-3 last:mb-0">
+                    <RadioGroupItem value={option.id.toString()} id={`option-${option.id}`} />
+                    <Label htmlFor={`option-${option.id}`} className="cursor-pointer">
+                      {option.text}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            )}
           </CardContent>
           <CardFooter className="flex justify-between">
             <Button

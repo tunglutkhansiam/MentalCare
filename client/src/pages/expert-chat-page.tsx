@@ -250,28 +250,15 @@ export default function ExpertChatPage() {
           </DropdownMenu>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-100">
           {messages && messages.length > 0 ? (
             messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.sender === "expert" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[75%] rounded-lg p-3 ${
-                    message.sender === "expert"
-                      ? "bg-primary text-white rounded-tr-none"
-                      : "bg-muted rounded-tl-none"
-                  }`}
-                >
-                  <p className="text-sm">{message.content}</p>
-                  <p className="text-xs mt-1 opacity-70">
-                    {message.timestamp 
-                      ? formatDistance(new Date(message.timestamp), new Date(), { addSuffix: true })
-                      : "Just now"}
-                  </p>
-                </div>
-              </div>
+              <ChatMessage 
+                key={message.id} 
+                message={message} 
+                isUser={message.sender === "expert"}
+                onDelete={() => refetch()}
+              />
             ))
           ) : (
             <div className="text-center text-muted-foreground">

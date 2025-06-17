@@ -111,10 +111,19 @@ export default function QuestionnairePage() {
   const currentQuestion = questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
   
-  console.log("Current question index:", currentQuestionIndex);
-  console.log("Total questions:", questions.length);
-  console.log("Current question:", currentQuestion?.text);
-  console.log("Is last question:", currentQuestionIndex === questions.length - 1);
+  // Debug logs - only show on last question to avoid spam
+  if (currentQuestionIndex === questions.length - 1) {
+    console.log("=== ON LAST QUESTION ===");
+    console.log("Current question index:", currentQuestionIndex);
+    console.log("Total questions:", questions.length);
+    console.log("Current question:", currentQuestion?.text);
+    console.log("Current answers:", answers);
+    console.log("Submit mutation state:", {
+      isPending: submitMutation.isPending,
+      isError: submitMutation.isError,
+      error: submitMutation.error
+    });
+  }
   
   const handleAnswer = (value: any) => {
     setAnswers({
@@ -308,6 +317,7 @@ export default function QuestionnairePage() {
             <div className="space-x-2">
               <Button
                 onClick={() => {
+                  alert(`Button clicked! Question ${currentQuestionIndex + 1} of ${questions.length}`);
                   console.log("Button clicked!");
                   handleNext();
                 }}
@@ -325,6 +335,7 @@ export default function QuestionnairePage() {
               <Button
                 variant="secondary"
                 onClick={() => {
+                  alert("Direct submit clicked!");
                   console.log("Direct submit clicked!");
                   const responseData = {
                     questionnaireId: questionnaire.id,

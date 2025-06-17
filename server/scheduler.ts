@@ -17,11 +17,18 @@ class AppointmentScheduler {
 
   start() {
     // Check every 5 minutes for appointments needing reminders
-    this.intervalId = setInterval(() => {
-      this.checkAndSendReminders();
+    this.intervalId = setInterval(async () => {
+      console.log("🔔 [Scheduler] Running automatic reminder check...");
+      await this.checkAndSendReminders();
     }, 5 * 60 * 1000); // 5 minutes
 
     console.log("Appointment reminder scheduler started");
+    
+    // Run initial check after 10 seconds
+    setTimeout(async () => {
+      console.log("🔔 [Scheduler] Running initial reminder check...");
+      await this.checkAndSendReminders();
+    }, 10000);
   }
 
   stop() {

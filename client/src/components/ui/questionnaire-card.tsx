@@ -1,34 +1,61 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { ClipboardList } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ClipboardList, CheckCircle } from "lucide-react";
 import { useLocation } from "wouter";
 import { Questionnaire } from "@shared/schema";
 
 interface QuestionnaireCardProps {
-  questionnaire: Pick<Questionnaire, "id" | "title" | "description">;
+  questionnaire: Pick<Questionnaire, "id" | "title" | "description"> & { completed?: boolean; completedAt?: string };
 }
 
 export default function QuestionnaireCard({ questionnaire }: QuestionnaireCardProps) {
   const [, navigate] = useLocation();
   
   const handleClick = () => {
-    navigate(`/questionnaire/${questionnaire.id}`);
+    if (!questionnaire.completed) {
+      navigate(`/questionnaire/${questionnaire.id}`);
+    }
   };
+  
+  const isCompleted = questionnaire.completed;
   
   return (
     <Card 
-      className="cursor-pointer hover:shadow-md transition-shadow" 
+      className={`transition-shadow ${isCompleted ? 'opacity-75' : 'cursor-pointer hover:shadow-md'}`}
       onClick={handleClick}
     >
       <CardContent className="p-4">
-        <div className="flex items-center mb-2">
-          <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-            <ClipboardList className="h-5 w-5 text-primary" />
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 flex-shrink-0 ${
+              isCompleted ? 'bg-green-100' : 'bg-primary/10'
+            }`}>
+              {isCompleted ? (
+                <CheckCircle className="h-5 w-5 text-green-600" />
+              ) : (
+                <ClipboardList className="h-5 w-5 text-primary" />
+              )}
+            </div>
+            <h3 className="font-medium text-lg">{questionnaire.title}</h3>
           </div>
-          <h3 className="font-medium text-lg">{questionnaire.title}</h3>
+          {isCompleted && (
+            <Badge variant="secondary" className="bg-green-100 text-green-700">
+              Completed
+            </Badge>
+          )}
         </div>
         <p className="text-sm text-muted-foreground line-clamp-2">{questionnaire.description}</p>
         <div className="mt-3 text-sm text-right">
-          <span className="text-primary font-medium">Take assessment</span>
+          {isCompleted ? (
+            <span className="text-muted-foreground">
+              {questionnaire.completedAt ? 
+                `Completed on ${new Date(questionnaire.completedAt).toLocaleDateString()}` : 
+                'Assessment completed'
+              }
+            </span>
+          ) : (
+            <span className="text-primary font-medium">Take assessment</span>
+          )}
         </div>
       </CardContent>
     </Card>

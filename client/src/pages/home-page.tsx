@@ -23,7 +23,7 @@ export default function HomePage() {
   const { user, expert, isExpert, logoutMutation } = useAuth();
   
   // Fetch user-related data
-  const { data: questionnaires, isLoading: loadingQuestionnaires } = useQuery<Pick<Questionnaire, "id" | "title" | "description">[]>({
+  const { data: questionnaires, isLoading: loadingQuestionnaires } = useQuery<(Pick<Questionnaire, "id" | "title" | "description"> & { completed?: boolean; completedAt?: string })[]>({
     queryKey: ["/api/questionnaires"],
     enabled: !isExpert, // Only fetch if not an expert
   });

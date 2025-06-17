@@ -161,16 +161,12 @@ export default function ExpertProfilePage() {
             <h2 className="font-semibold mb-2 mobile-text">Consultation Details</h2>
             <div className="text-muted-foreground mobile-text space-y-2">
               <div className="flex justify-between">
-                <span>Consultation Fee:</span>
-                <span className="font-medium text-green-600">Free</span>
-              </div>
-              <div className="flex justify-between">
                 <span>Session Duration:</span>
                 <span className="font-medium">45-60 minutes</span>
               </div>
               <div className="flex justify-between">
                 <span>Languages:</span>
-                <span className="font-medium">English, Hindi</span>
+                <span className="font-medium">English, Hindi, Paite</span>
               </div>
               <div className="flex justify-between">
                 <span>Available:</span>

@@ -501,6 +501,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete individual message
+  app.delete("/api/messages/:messageId", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const messageId = parseInt(req.params.messageId);
+      
+      if (isNaN(messageId)) {
+        return res.status(400).json({ message: "Invalid message ID" });
+      }
+      
+      const success = await storage.deleteMessage(messageId, req.user.id);
+      
+      if (success) {
+        res.json({ message: "Message deleted successfully" });
+      } else {
+        res.status(404).json({ message: "Message not found or unauthorized" });
+      }
+    } catch (err) {
+      console.error("Error deleting message:", err);
+      res.status(500).json({ message: "Failed to delete message" });
+    }
+  });
+
+  // Delete entire conversation between user and expert
+  app.delete("/api/conversations/:expertId", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const expertId = parseInt(req.params.expertId);
+      
+      if (isNaN(expertId)) {
+        return res.status(400).json({ message: "Invalid expert ID" });
+      }
+      
+      const deletedCount = await storage.deleteMessagesByConversation(req.user.id, expertId);
+      
+      res.json({ 
+        message: `Deleted ${deletedCount} messages from conversation`,
+        deletedCount 
+      });
+    } catch (err) {
+      console.error("Error deleting conversation:", err);
+      res.status(500).json({ message: "Failed to delete conversation" });
+    }
+  });
+
   // Questionnaire endpoints
   app.get("/api/questionnaires", async (req, res) => {
     try {

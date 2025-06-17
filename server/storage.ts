@@ -44,6 +44,8 @@ export interface IStorage {
   getMessagesByUserAndExpert(userId: number, expertId: number): Promise<Message[]>;
   getMessagesByExpert(expertId: number): Promise<(Message & { user: User })[]>;
   createMessage(message: InsertMessage): Promise<Message>;
+  deleteMessage(messageId: number, userId: number): Promise<boolean>;
+  deleteMessagesByConversation(userId: number, expertId: number): Promise<number>;
   
   // Category methods
   getCategories(): Promise<Category[]>;
@@ -484,6 +486,85 @@ export class DatabaseStorage implements IStorage {
   async createMessage(message: InsertMessage): Promise<Message> {
     const [newMessage] = await db.insert(messages).values(message).returning();
     return newMessage;
+  }
+
+  async deleteMessage(messageId: number, userId: number): Promise<boolean> {
+    try {
+      // First verify that the message belongs to the user (either as sender or recipient)
+      const [message] = await db
+        .select()
+        .from(messages)
+        .where(eq(messages.id, messageId));
+
+      if (!message) {
+        return false;
+      }
+
+      // Check if the user is authorized to delete this message
+      // Users can delete their own messages, experts can delete messages in their conversations
+      const expert = await this.getExpertByUserId(userId);
+      const canDelete = message.userId === userId || (expert && message.expertId === expert.id);
+
+      if (!canDelete) {
+        return false;
+      }
+
+      // Delete the message
+      const result = await db
+        .delete(messages)
+        .where(eq(messages.id, messageId));
+
+      return true;
+    } catch (error) {
+      console.error("Error deleting message:", error);
+      return false;
+    }
+  }
+
+  async deleteMessagesByConversation(userId: number, expertId: number): Promise<number> {
+    try {
+      // Verify user authorization - either the user or the expert can delete conversation
+      const expert = await this.getExpert(expertId);
+      if (!expert) {
+        return 0;
+      }
+
+      const userExpert = await this.getExpertByUserId(userId);
+      const canDelete = userExpert?.id === expertId;
+
+      if (!canDelete) {
+        // If not an expert, check if it's the user's own conversation
+        const userMessages = await db
+          .select()
+          .from(messages)
+          .where(
+            and(
+              eq(messages.userId, userId),
+              eq(messages.expertId, expertId)
+            )
+          );
+
+        if (userMessages.length === 0) {
+          return 0; // User has no messages in this conversation
+        }
+      }
+
+      // Delete all messages in the conversation
+      const deletedMessages = await db
+        .delete(messages)
+        .where(
+          and(
+            eq(messages.userId, userId),
+            eq(messages.expertId, expertId)
+          )
+        )
+        .returning();
+
+      return deletedMessages.length;
+    } catch (error) {
+      console.error("Error deleting conversation messages:", error);
+      return 0;
+    }
   }
   
   async getCategories(): Promise<Category[]> {

@@ -1,17 +1,25 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, ArrowLeft } from "lucide-react";
+import { Send, ArrowLeft, MoreVertical, Trash2 } from "lucide-react";
 import { Message, InsertMessage, User } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistance } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import MobileLayout from "@/components/layouts/mobile-layout";
+import ChatMessage from "@/components/ui/chat-message";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 export default function ExpertChatPage() {
   const { userId } = useParams();
@@ -19,6 +27,7 @@ export default function ExpertChatPage() {
   const [newMessage, setNewMessage] = useState("");
   const { user, expert } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [, navigate] = useLocation();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -122,6 +131,35 @@ export default function ExpertChatPage() {
     navigate("/");
   };
 
+  // Delete conversation mutation
+  const deleteConversationMutation = useMutation({
+    mutationFn: async () => {
+      if (!expert?.id) throw new Error("Expert ID is required");
+      await apiRequest("DELETE", `/api/conversations/${expert.id}`);
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Conversation deleted",
+        description: `Successfully deleted ${data?.deletedCount || 0} messages`,
+      });
+      // Navigate back and invalidate queries
+      handleBack();
+      queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/expert-messages"] });
+    },
+    onError: () => {
+      toast({
+        title: "Delete failed",
+        description: "Unable to delete conversation. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteConversation = () => {
+    deleteConversationMutation.mutate();
+  };
+
   function getInitials(firstName?: string, lastName?: string) {
     if (!firstName && !lastName) return "?";
     return `${firstName ? firstName.charAt(0) : ""}${lastName ? lastName.charAt(0) : ""}`.toUpperCase();
@@ -174,19 +212,42 @@ export default function ExpertChatPage() {
   return (
     <MobileLayout showNavigation={false}>
       <div className="flex flex-col h-full">
-        <div className="bg-primary text-white p-4 flex items-center">
-          <Button variant="ghost" size="icon" className="mr-2 text-white" onClick={handleBack}>
-            <ArrowLeft size={18} />
-          </Button>
-          <Avatar className="h-8 w-8 mr-2 border border-white/20">
-            <AvatarFallback className="bg-primary-foreground text-primary text-xs">
-              {getInitials(patientData.firstName, patientData.lastName)}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <h1 className="text-lg font-medium">{patientData.firstName} {patientData.lastName}</h1>
-            <p className="text-xs text-primary-foreground/70">{patientData.email}</p>
+        <div className="bg-primary text-white p-4 flex items-center justify-between">
+          <div className="flex items-center">
+            <Button variant="ghost" size="icon" className="mr-2 text-white" onClick={handleBack}>
+              <ArrowLeft size={18} />
+            </Button>
+            <Avatar className="h-8 w-8 mr-2 border border-white/20">
+              <AvatarFallback className="bg-primary-foreground text-primary text-xs">
+                {getInitials(patientData.firstName, patientData.lastName)}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h1 className="text-lg font-medium">{patientData.firstName} {patientData.lastName}</h1>
+              <p className="text-xs text-primary-foreground/70">{patientData.email}</p>
+            </div>
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-white hover:bg-blue-600 p-2"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem 
+                onClick={handleDeleteConversation}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer"
+                disabled={deleteConversationMutation.isPending}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Conversation
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">

@@ -1,21 +1,29 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Send } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Send, MoreVertical, Trash2 } from "lucide-react";
 import { Expert, User, Message, InsertMessage } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { getQueryFn } from "@/lib/queryClient";
+import { getQueryFn, apiRequest } from "@/lib/queryClient";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import ChatMessage from "@/components/ui/chat-message";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 export default function ChatPage() {
   const { userId, expertId } = useParams();
   const [, navigate] = useLocation();
   const { user, isExpert } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [messageText, setMessageText] = useState("");
   const [socket, setSocket] = useState<WebSocket | null>(null);
@@ -276,6 +284,35 @@ export default function ChatPage() {
       });
     }
   };
+
+  // Delete conversation mutation
+  const deleteConversationMutation = useMutation({
+    mutationFn: async () => {
+      if (!expertId) throw new Error("Expert ID is required");
+      await apiRequest("DELETE", `/api/conversations/${expertId}`);
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Conversation deleted",
+        description: `Successfully deleted ${data?.deletedCount || 0} messages`,
+      });
+      // Navigate back and invalidate queries
+      handleBackClick();
+      queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/expert-messages"] });
+    },
+    onError: () => {
+      toast({
+        title: "Delete failed",
+        description: "Unable to delete conversation. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteConversation = () => {
+    deleteConversationMutation.mutate();
+  };
   
   // Loading state
   if ((isExpert && loadingUser) || (!isExpert && loadingExpert)) {
@@ -342,13 +379,34 @@ export default function ChatPage() {
             </button>
             {renderHeaderContent()}
           </div>
-          <button 
-            onClick={() => cleanupChat()} 
-            className="text-xs bg-blue-600 hover:bg-blue-700 rounded px-2 py-1 touch-target tap-highlight-none"
-            title="Remove duplicate messages"
-          >
-            Fix Chat
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-white hover:bg-blue-600 p-2"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem 
+                onClick={cleanupChat}
+                className="cursor-pointer"
+              >
+                Fix Chat
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={handleDeleteConversation}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer"
+                disabled={deleteConversationMutation.isPending}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Conversation
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
       

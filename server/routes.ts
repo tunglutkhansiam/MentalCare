@@ -551,6 +551,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Questionnaire endpoints
   app.get("/api/questionnaires", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
     try {
       // Get all questionnaires with their basic details (without full questions for the list view)
       const allQuestionnaires = await db.select({
@@ -559,7 +561,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: questionnaires.description
       }).from(questionnaires);
       
-      res.json(allQuestionnaires);
+      // Get user's completed questionnaire responses
+      const userResponses = await db.select({
+        questionnaireId: questionnaireResponses.questionnaireId,
+        completedAt: questionnaireResponses.completedAt
+      }).from(questionnaireResponses)
+        .where(eq(questionnaireResponses.userId, req.user.id));
+      
+      // Mark completed questionnaires
+      const questionnairesWithStatus = allQuestionnaires.map(questionnaire => {
+        const completed = userResponses.find(response => response.questionnaireId === questionnaire.id);
+        return {
+          ...questionnaire,
+          completed: !!completed,
+          completedAt: completed?.completedAt || null
+        };
+      });
+      
+      res.json(questionnairesWithStatus);
     } catch (err) {
       console.error("Error fetching questionnaires:", err);
       res.status(500).json({ message: "Failed to fetch questionnaires" });
@@ -572,6 +591,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const questionnaireId = parseInt(req.params.id);
       
+      // Check if user has already completed this questionnaire
+      const [existingResponse] = await db.select().from(questionnaireResponses)
+        .where(and(
+          eq(questionnaireResponses.userId, req.user.id),
+          eq(questionnaireResponses.questionnaireId, questionnaireId)
+        ));
+      
+      if (existingResponse) {
+        return res.status(403).json({ 
+          message: "You have already completed this questionnaire",
+          completed: true,
+          completedAt: existingResponse.completedAt
+        });
+      }
+      
       // Get the full questionnaire with questions
       const [questionnaire] = await db.select().from(questionnaires)
         .where(eq(questionnaires.id, questionnaireId));
@@ -580,7 +614,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Questionnaire not found" });
       }
       
-      res.json(questionnaire);
+      res.json({ ...questionnaire, completed: false });
     } catch (err) {
       console.error("Error fetching questionnaire:", err);
       res.status(500).json({ message: "Failed to fetch questionnaire" });

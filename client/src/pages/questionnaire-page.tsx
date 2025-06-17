@@ -30,7 +30,7 @@ export default function QuestionnairePage() {
   const [score, setScore] = useState<number | null>(null);
   
   // Fetch questionnaire
-  const { data: questionnaire, isLoading } = useQuery<Questionnaire>({
+  const { data: questionnaire, isLoading, error } = useQuery<Questionnaire & { completed?: boolean; completedAt?: string }>({
     queryKey: [`/api/questionnaires/${id}`, user?.id],
     enabled: !!id && !!user?.id,
   });
@@ -73,6 +73,39 @@ export default function QuestionnairePage() {
           <h1 className="text-2xl font-semibold mb-4">Questionnaire Not Found</h1>
           <p className="text-muted-foreground mb-4">The questionnaire you're looking for doesn't exist or has been removed.</p>
           <Button onClick={() => navigate("/")}>Go Back Home</Button>
+        </div>
+      </MobileLayout>
+    );
+  }
+
+  // Check if questionnaire is already completed
+  if (questionnaire.completed) {
+    return (
+      <MobileLayout>
+        <div className="max-w-2xl mx-auto p-4">
+          <Card className="text-center">
+            <CardHeader>
+              <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                <CheckCircle className="h-8 w-8 text-green-600" />
+              </div>
+              <CardTitle className="text-xl">Questionnaire Completed</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground mb-4">
+                You have already completed this questionnaire.
+              </p>
+              {questionnaire.completedAt && (
+                <p className="text-sm text-muted-foreground">
+                  Completed on: {new Date(questionnaire.completedAt).toLocaleDateString()}
+                </p>
+              )}
+              <div className="mt-6">
+                <Button onClick={() => navigate("/")} className="w-full">
+                  Return to Home
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </MobileLayout>
     );

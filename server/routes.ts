@@ -7,7 +7,7 @@ import { setupAuth } from "./auth";
 import { sendSMS, formatAppointmentConfirmationSMS, formatExpertNotificationSMS } from "./sms";
 import { appointmentScheduler } from "./scheduler";
 import { z } from "zod";
-import { insertAppointmentSchema, insertMessageSchema, questionnaires, questionnaireResponses, messages } from "@shared/schema";
+import { insertAppointmentSchema, insertMessageSchema, insertQuestionnaireResponseSchema, questionnaires, questionnaireResponses, messages } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, inArray } from "drizzle-orm";
 
@@ -590,18 +590,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
-      const responseData = {
+      const responseData = insertQuestionnaireResponseSchema.parse({
         ...req.body,
         userId: req.user.id
-      };
+      });
       
-      // Save questionnaire response
-      const [response] = await db.insert(questionnaireResponses)
-        .values(responseData)
-        .returning();
+      // Check if user already has a response for this questionnaire
+      const existingResponse = await storage.getQuestionnaireResponseByUser(
+        req.user.id, 
+        responseData.questionnaireId
+      );
+      
+      let response;
+      if (existingResponse) {
+        // Update existing response
+        response = await storage.updateQuestionnaireResponse(existingResponse.id, {
+          responses: responseData.responses,
+          completedAt: new Date()
+        });
+      } else {
+        // Create new response
+        response = await storage.createQuestionnaireResponse(responseData);
+      }
       
       res.status(201).json(response);
     } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors });
+      }
       console.error("Error saving questionnaire response:", err);
       res.status(500).json({ message: "Failed to save questionnaire response" });
     }
@@ -627,6 +643,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(userResponses);
     } catch (err) {
       console.error("Error fetching user questionnaire responses:", err);
+      res.status(500).json({ message: "Failed to fetch responses" });
+    }
+  });
+
+  // Get user questionnaire responses for experts - to view patient intake information
+  app.get("/api/expert/user/:userId/questionnaire-responses", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      // First verify the requester is an expert
+      const expert = await storage.getExpertByUserId(req.user.id);
+      if (!expert) {
+        return res.status(403).json({ message: "Access denied: Only experts can view user questionnaire responses" });
+      }
+      
+      const userId = parseInt(req.params.userId);
+      
+      // Validate userId
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID format" });
+      }
+      
+      // Get all responses by the specified user with questionnaire details
+      const userResponses = await db.select({
+        response: questionnaireResponses,
+        questionnaire: questionnaires
+      })
+      .from(questionnaireResponses)
+      .innerJoin(questionnaires, eq(questionnaires.id, questionnaireResponses.questionnaireId))
+      .where(eq(questionnaireResponses.userId, userId))
+      .orderBy(desc(questionnaireResponses.completedAt));
+      
+      res.json(userResponses);
+    } catch (err) {
+      console.error("Error fetching user questionnaire responses for expert:", err);
       res.status(500).json({ message: "Failed to fetch responses" });
     }
   });

@@ -49,7 +49,7 @@ export function formatAppointmentReminderSMS(
   appointmentDate: string,
   appointmentTime: string
 ): string {
-  return `Reminder: You have a MentalCare appointment tomorrow with ${expertName} at ${appointmentTime}. We look forward to seeing you!`;
+  return `Reminder: You have a MentalCare appointment with ${expertName} at ${appointmentTime} IST on ${appointmentDate}. We look forward to seeing you!`;
 }
 
 export function formatExpertNotificationSMS(

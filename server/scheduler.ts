@@ -41,50 +41,65 @@ class AppointmentScheduler {
 
   private async checkAndSendReminders() {
     try {
-      const now = new Date();
-      const fiftyFiveMinutesFromNow = new Date(now.getTime() + 55 * 60 * 1000);
-      const sixtyFiveMinutesFromNow = new Date(now.getTime() + 65 * 60 * 1000);
+      // Get current time in IST (UTC+5:30)
+      const nowUTC = new Date();
+      const nowIST = new Date(nowUTC.getTime() + (5.5 * 60 * 60 * 1000));
+      
+      console.log(`[Reminder Check] Current IST time: ${this.formatISTTime(nowIST)}`);
 
-      console.log(`[Reminder Check] Current time: ${now.toISOString()}`);
-      console.log(`[Reminder Check] Looking for appointments between ${fiftyFiveMinutesFromNow.toISOString()} and ${sixtyFiveMinutesFromNow.toISOString()}`);
+      // Get all upcoming appointments
+      const allAppointments = await storage.getAllUpcomingAppointments();
+      console.log(`[Reminder Check] Found ${allAppointments.length} total upcoming appointments`);
 
-      // Get all upcoming appointments that need reminders
-      const upcomingAppointments = await this.getUpcomingAppointmentsForReminders(
-        fiftyFiveMinutesFromNow,
-        sixtyFiveMinutesFromNow
-      );
+      const remindersToSend: AppointmentReminder[] = [];
 
-      console.log(`[Reminder Check] Found ${upcomingAppointments.length} appointments in reminder window`);
-
-      for (const appointment of upcomingAppointments) {
-        console.log(`[Reminder Check] Processing appointment ${appointment.id}: ${appointment.date} ${appointment.time}`);
-        
+      for (const appointment of allAppointments) {
         // Skip if we've already sent a reminder for this appointment
         if (this.sentReminders.has(appointment.id)) {
-          console.log(`[Reminder Check] Skipping appointment ${appointment.id} - reminder already sent`);
           continue;
         }
 
-        // Check if the appointment is exactly 1 hour away (within 5-minute window)
-        const appointmentDateTime = new Date(`${appointment.date} ${appointment.time}`);
-        const timeDiff = appointmentDateTime.getTime() - now.getTime();
-        const oneHourInMs = 60 * 60 * 1000;
-        const timeDiffMinutes = Math.round(timeDiff / (60 * 1000));
+        // Parse appointment time as IST
+        const appointmentDateTimeIST = new Date(`${appointment.date} ${appointment.time}`);
+        const timeDiffMinutes = Math.round((appointmentDateTimeIST.getTime() - nowIST.getTime()) / (60 * 1000));
         
-        console.log(`[Reminder Check] Appointment ${appointment.id} is ${timeDiffMinutes} minutes away`);
+        console.log(`[Reminder Check] Appointment ${appointment.id}: ${appointment.date} ${appointment.time} IST (${timeDiffMinutes} minutes away)`);
         
-        // Send reminder if appointment is between 55 minutes and 65 minutes away
-        if (timeDiff >= (oneHourInMs - 5 * 60 * 1000) && timeDiff <= (oneHourInMs + 5 * 60 * 1000)) {
-          console.log(`[Reminder Check] Sending reminder for appointment ${appointment.id}`);
-          await this.sendAppointmentReminder(appointment);
-          this.sentReminders.add(appointment.id);
-        } else {
-          console.log(`[Reminder Check] Appointment ${appointment.id} not in reminder window (${timeDiffMinutes} minutes away)`);
+        // Send reminder if appointment is between 55 and 65 minutes away
+        if (timeDiffMinutes >= 55 && timeDiffMinutes <= 65) {
+          console.log(`[Reminder Check] Appointment ${appointment.id} is in reminder window`);
+          
+          // Get user and expert details
+          const user = await storage.getUser(appointment.userId);
+          const expert = await storage.getExpert(appointment.expertId);
+
+          if (user && expert && user.phoneNumber) {
+            remindersToSend.push({
+              id: appointment.id,
+              userId: appointment.userId,
+              expertId: appointment.expertId,
+              date: appointment.date,
+              time: appointment.time,
+              userPhone: user.phoneNumber,
+              expertName: expert.name,
+            });
+          }
         }
+      }
+
+      console.log(`[Reminder Check] Sending ${remindersToSend.length} reminders`);
+
+      for (const reminder of remindersToSend) {
+        await this.sendAppointmentReminder(reminder);
+        this.sentReminders.add(reminder.id);
       }
     } catch (error) {
       console.error("Error checking appointment reminders:", error);
     }
+  }
+
+  private formatISTTime(date: Date): string {
+    return date.toISOString().replace('Z', '+05:30');
   }
 
   private async getUpcomingAppointmentsForReminders(
@@ -99,10 +114,12 @@ class AppointmentScheduler {
       const reminders: AppointmentReminder[] = [];
 
       for (const appointment of allAppointments) {
-        const appointmentDateTime = new Date(`${appointment.date} ${appointment.time}`);
-        console.log(`[Reminder Fetch] Checking appointment ${appointment.id}: ${appointment.date} ${appointment.time} (${appointmentDateTime.toISOString()})`);
+        // Parse appointment time as IST and convert to UTC for comparison
+        const appointmentDateTimeIST = new Date(`${appointment.date} ${appointment.time}`);
+        const appointmentDateTimeUTC = new Date(appointmentDateTimeIST.getTime() - (5.5 * 60 * 60 * 1000));
+        console.log(`[Reminder Fetch] Checking appointment ${appointment.id}: ${appointment.date} ${appointment.time} IST (${appointmentDateTimeUTC.toISOString()} UTC)`);
         
-        if (appointmentDateTime >= startTime && appointmentDateTime <= endTime) {
+        if (appointmentDateTimeUTC >= startTime && appointmentDateTimeUTC <= endTime) {
           console.log(`[Reminder Fetch] Appointment ${appointment.id} is in time window`);
           
           // Get user details for phone number

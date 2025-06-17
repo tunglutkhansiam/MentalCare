@@ -8,6 +8,7 @@ import { sendSMS, formatAppointmentConfirmationSMS, formatExpertNotificationSMS 
 import { appointmentScheduler } from "./scheduler";
 import { z } from "zod";
 import { insertAppointmentSchema, insertMessageSchema, questionnaires, questionnaireResponses, messages } from "@shared/schema";
+import type { InsertQuestionnaireResponse } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, inArray } from "drizzle-orm";
 
@@ -590,10 +591,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
-      const responseData = {
-        ...req.body,
-        userId: req.user.id
+      const { questionnaireId, responses, score } = req.body;
+      
+      const responseData: InsertQuestionnaireResponse = {
+        userId: req.user.id,
+        questionnaireId: questionnaireId,
+        responses: responses,
+        score: score || 0
       };
+      
+      console.log("Saving questionnaire response:", JSON.stringify(responseData, null, 2));
       
       // Save questionnaire response
       const [response] = await db.insert(questionnaireResponses)

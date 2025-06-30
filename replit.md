@@ -99,8 +99,9 @@ The application follows a modern full-stack architecture with clear separation o
 ## External Dependencies
 
 ### Database and Infrastructure
-- **Neon PostgreSQL**: Serverless PostgreSQL hosting with connection pooling
+- **PostgreSQL**: Local or cloud PostgreSQL database with connection pooling
 - **Drizzle ORM**: Type-safe database operations and migrations
+- **Docker**: Optional containerized PostgreSQL for local development
 
 ### Communication Services
 - **Twilio**: SMS notifications for appointment reminders and confirmations

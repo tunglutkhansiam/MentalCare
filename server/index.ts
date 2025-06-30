@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { appointmentScheduler } from "./scheduler";
+import { runMigrations } from "./migrate";
 
 const app = express();
 app.use(express.json());
@@ -38,6 +39,15 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  try {
+    // Run database migrations first
+    await runMigrations();
+    log("Database setup completed");
+  } catch (error) {
+    console.error("Database migration failed:", error);
+    process.exit(1);
+  }
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -57,15 +67,9 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
+  // Use PORT from environment (Render sets this) or fallback to 5000
+  const port = parseInt(process.env.PORT || "5000");
+  server.listen(port, "0.0.0.0", () => {
     log(`serving on port ${port}`);
     
     // Start the appointment reminder scheduler
